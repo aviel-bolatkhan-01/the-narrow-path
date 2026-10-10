@@ -755,7 +755,7 @@
           case 'credits':
             NP_UI.modal({
               title: 'Credits',
-              body: 'Game created by [Your Name]',
+              body: 'Game created by Aviel Bolatkhan',
               buttons: [{ label: 'Close' }]
             });
             break;
