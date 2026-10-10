@@ -135,15 +135,15 @@ window.NP_ENEMIES = {
   goliath: {
     id: 'goliath',
     name: 'Goliath',
-    hp: [100, 110],
+    hp: [78, 86],
     tier: 'boss',
     art: 'assets/img/en_goliath.png',
     moves: [
-      { name: 'Strike', kind: 'attack', value: 18, weight: 0.2, telegraph: true },
-      { name: 'Defend', kind: 'defend', block: 20, weight: 0.2 },
-      { name: 'Power Strike', kind: 'attack', value: 25, weight: 0.1, telegraph: true },
-      { name: 'Rally', kind: 'buff', effect: 'strength', times: 3, weight: 0.2 },
-      { name: 'Whirlwind', kind: 'attack', value: 12, times: 3, weight: 0.3 }
+      { name: 'Strike', kind: 'attack', value: 15, weight: 0.2, telegraph: true },
+      { name: 'Defend', kind: 'defend', block: 12, weight: 0.2 },
+      { name: 'Power Strike', kind: 'attack', value: 21, weight: 0.1, telegraph: true },
+      { name: 'Rally', kind: 'buff', effect: 'strength', times: 2, weight: 0.2 },
+      { name: 'Whirlwind', kind: 'attack', value: 10, times: 3, weight: 0.3 }
     ],
     ai: 'pattern'
   },

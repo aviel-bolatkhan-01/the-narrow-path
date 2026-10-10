@@ -25,8 +25,10 @@ html, body {
   margin: 0;
   padding: 0;
   background-color: var(--parchment);
-  background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
-  background-blend-mode: overlay;
+  background-image: url('assets/img/parchment.png'), radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+  background-size: 512px auto, auto;
+  background-repeat: repeat, no-repeat;
+  background-blend-mode: multiply, overlay;
   color: var(--ink);
   font-family: 'EB Garamond', serif;
   overflow: hidden;
@@ -1052,6 +1054,7 @@ input[type="range"]::-moz-range-thumb {
 
 .screen.combat .hand {
   flex-wrap: nowrap;
+  bottom: 68px;
   z-index: 10;
 }
 
@@ -1132,7 +1135,7 @@ input[type="range"]::-moz-range-thumb {
 .pile-info {
   display: flex;
   gap: 10px;
-  color: var(--parchment);
+  color: var(--ink);
   font-family: 'EB Garamond', serif;
   font-size: .9rem;
   opacity: .85;
@@ -1240,4 +1243,49 @@ input[type="range"]::-moz-range-thumb {
   letter-spacing: 0.05em;
 }
 
+.title-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+  opacity: 0.85;
+}
+
+.title-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.35) 100%);
+  pointer-events: none;
+}
+.title-screen h1, .title-screen .subtitle, .title-screen .btn-wrap, .title-screen .footer { position: relative; z-index: 1; }
+
+.act-banner {
+  width: 100%;
+  height: 72px;
+  object-fit: cover;
+  object-position: center 35%;
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  opacity: 0.9;
+  margin-bottom: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.draw-pile {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.draw-pile img {
+  width: 13px;
+  height: 18px;
+  object-fit: cover;
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  vertical-align: middle;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
 > John 3:16 - For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.

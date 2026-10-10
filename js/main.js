@@ -429,8 +429,8 @@
       act: 1,
       floor: 0,
       seed: seed || String(Date.now()),
-      hp: 60,
-      maxHp: 60,
+      hp: 72,
+      maxHp: 72,
       gold: 99,
       potions: [],
       relics: ['prayer_beads'],
@@ -854,6 +854,7 @@
             NP_UI.show('map');
             break;
           case 'rest-smith':
+            G.prevScreen = 'map';
             G.screen = 'deck';
             G.deckMode = 'smith';
             NP_UI.renderAll();

@@ -20,7 +20,7 @@ window.NP_CARDS = {
     target: 'self',
     glyph: '🛡️',
     effects: [
-      { op: 'block', base: 5, up: 8 }
+      { op: 'block', base: 7, up: 10 }
     ]
   },
   inspiring_strike: {

@@ -1,0 +1,322 @@
+[
+  {
+    "file": "act1.png",
+    "prompt": "sunlit green valley with a winding path toward a distant cathedral",
+    "seed": 34763,
+    "w": 768,
+    "h": 384,
+    "status": "skipped"
+  },
+  {
+    "file": "act2.png",
+    "prompt": "dark valley of shadows with storm clouds and gnarled dead trees",
+    "seed": 21073,
+    "w": 768,
+    "h": 384,
+    "status": "skipped"
+  },
+  {
+    "file": "act3.png",
+    "prompt": "celestial war, angelic hosts and heavenly light above ancient battlements",
+    "seed": 90759,
+    "w": 768,
+    "h": 384,
+    "status": "skipped"
+  },
+  {
+    "file": "cardback.png",
+    "prompt": "ornate symmetrical card back with a golden cross motif and interlaced vines",
+    "seed": 42316,
+    "w": 512,
+    "h": 768,
+    "status": "skipped"
+  },
+  {
+    "file": "en_abaddons_hound.png",
+    "prompt": "Abaddon's Hound standing menacing full body portrait",
+    "seed": 64088,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_apollyon.png",
+    "prompt": "Apollyon standing menacing full body portrait",
+    "seed": 68599,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_baal_priest.png",
+    "prompt": "Baal Priest standing menacing full body portrait",
+    "seed": 97322,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_bottomless_pit_fiend.png",
+    "prompt": "Bottomless Pit Fiend standing menacing full body portrait",
+    "seed": 80844,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_death_and_hades.png",
+    "prompt": "Death and Hades standing menacing full body portrait",
+    "seed": 90083,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_false_prophet.png",
+    "prompt": "False Prophet standing menacing full body portrait",
+    "seed": 38205,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_famine_spirit.png",
+    "prompt": "Famine Spirit standing menacing full body portrait",
+    "seed": 46696,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_goliath.png",
+    "prompt": "Goliath standing menacing full body portrait",
+    "seed": 11312,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_grave_robber.png",
+    "prompt": "Grave Robber standing menacing full body portrait",
+    "seed": 35240,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_horned_imp.png",
+    "prompt": "Horned Imp standing menacing full body portrait",
+    "seed": 61179,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_iron_host.png",
+    "prompt": "Iron Host standing menacing full body portrait",
+    "seed": 81185,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_jezebels_guard.png",
+    "prompt": "Jezebel's Guard standing menacing full body portrait",
+    "seed": 63552,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_legion_sergeant.png",
+    "prompt": "Legion Sergeant standing menacing full body portrait",
+    "seed": 68749,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_locust_of_abyss.png",
+    "prompt": "Locust of Abyss standing menacing full body portrait",
+    "seed": 22031,
+    "w": 512,
+    "h": 512,
+    "status": "ok"
+  },
+  {
+    "file": "en_moloch_colossus.png",
+    "prompt": "Moloch Colossus standing menacing full body portrait",
+    "seed": 37750,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_money_changer.png",
+    "prompt": "Money Changer standing menacing full body portrait",
+    "seed": 67616,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_nephilim.png",
+    "prompt": "Nephilim standing menacing full body portrait",
+    "seed": 28521,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_pale_rider.png",
+    "prompt": "Pale Rider standing menacing full body portrait",
+    "seed": 41653,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_pharisee.png",
+    "prompt": "Pharisee standing menacing full body portrait",
+    "seed": 25438,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_shadow_of_doubt.png",
+    "prompt": "Shadow of Doubt standing menacing full body portrait",
+    "seed": 56048,
+    "w": 512,
+    "h": 512,
+    "status": "ok"
+  },
+  {
+    "file": "en_siren_of_babylon.png",
+    "prompt": "Siren of Babylon standing menacing full body portrait",
+    "seed": 48033,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_tempter.png",
+    "prompt": "Tempter standing menacing full body portrait",
+    "seed": 15569,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_the_beast.png",
+    "prompt": "The Beast standing menacing full body portrait",
+    "seed": 38722,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_the_dragon.png",
+    "prompt": "The Dragon standing menacing full body portrait",
+    "seed": 56222,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_throne_guard.png",
+    "prompt": "Throne Guard standing menacing full body portrait",
+    "seed": 3985,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_valley_shade.png",
+    "prompt": "Valley Shade standing menacing full body portrait",
+    "seed": 69528,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_void_walker.png",
+    "prompt": "Void Walker standing menacing full body portrait",
+    "seed": 48685,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_wasteland_stalker.png",
+    "prompt": "Wasteland Stalker standing menacing full body portrait",
+    "seed": 38801,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_whisperer.png",
+    "prompt": "Whisperer standing menacing full body portrait",
+    "seed": 86839,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_wild_beast.png",
+    "prompt": "Wild Beast standing menacing full body portrait",
+    "seed": 34835,
+    "w": 512,
+    "h": 512,
+    "status": "skipped"
+  },
+  {
+    "file": "en_zealot.png",
+    "prompt": "Zealot standing menacing full body portrait",
+    "seed": 41398,
+    "w": 512,
+    "h": 512,
+    "status": "ok"
+  },
+  {
+    "file": "faith.png",
+    "prompt": "a single blue flame rising from praying hands, centered on plain dark background, icon",
+    "seed": 449,
+    "w": 384,
+    "h": 384,
+    "status": "skipped"
+  },
+  {
+    "file": "gold.png",
+    "prompt": "a single golden coin with a cross emblem, centered on plain dark background, icon",
+    "seed": 65425,
+    "w": 384,
+    "h": 384,
+    "status": "skipped"
+  },
+  {
+    "file": "hp.png",
+    "prompt": "a single red heart with a small cross, centered on plain dark background, icon",
+    "seed": 2924,
+    "w": 384,
+    "h": 384,
+    "status": "skipped"
+  },
+  {
+    "file": "parchment.png",
+    "prompt": "aged blank parchment paper texture with worn edges and subtle stains, flat texture, no text, no border decoration",
+    "seed": 25085,
+    "w": 1024,
+    "h": 1024,
+    "status": "skipped"
+  },
+  {
+    "file": "title.png",
+    "prompt": "a lone robed traveler walking a narrow mountain path toward a radiant divine light, epic vista",
+    "seed": 90059,
+    "w": 1024,
+    "h": 576,
+    "status": "skipped"
+  }
+]

@@ -26,6 +26,7 @@
     renderTitle(container) {
       container.innerHTML = `
         <div class="title-screen">
+          <img class="title-bg" src="assets/img/title.png" alt="" onerror="this.style.display='none'">
           <h1>THE NARROW PATH</h1>
           <p class="subtitle">A Christian Roguelike Deck-Building Game</p>
           <div class="btn-wrap">
@@ -42,6 +43,7 @@
       container.innerHTML = `
         <div class="map-screen">
           <div class="map-header">
+            <img class="act-banner" src="assets/img/act${G.run.act}.png" alt="" onerror="this.style.display='none'">
             <div class="floor-info">Act ${G.run.act} - Floor ${G.run.floor}</div>
             <div class="resources">
               <div class="resource gold">${G.run.gold} <img src="assets/img/gold.png" alt="Gold"></div>
@@ -83,7 +85,7 @@
         </div>
         <div class="hand"></div>
         <div class="combat-controls">
-          <div class="pile-info"><span>Draw: ${G.combat.draw.length}</span><span>Discard: ${G.combat.discard.length}</span><span>Exhaust: ${G.combat.exhaust.length}</span></div>
+          <div class="pile-info"><span class="draw-pile"><img src="assets/img/cardback.png" alt="Draw pile"> Draw: ${G.combat.draw.length}</span><span>Discard: ${G.combat.discard.length}</span><span>Exhaust: ${G.combat.exhaust.length}</span></div>
           <button class="btn btn-ghost" data-action="toggle-log">LOG</button>
           <button class="btn btn-ghost" data-action="concede">CONCEDE</button>
           <button class="btn btn-primary" data-action="end-turn">END TURN</button>
@@ -174,7 +176,7 @@
       container.innerHTML = `
         <div class="deck-screen">
           <button class="btn-close" data-action="deck-close">×</button>
-          ${this.renderDeck(G.run.deck, 'view')}
+          ${this.renderDeck(G.run.deck, G.deckMode === 'smith' ? 'smith' : 'view')}
         </div>
       `;
     },
