@@ -220,7 +220,7 @@ window.NP_EVENTS = {
           if (api.hasRelic('samsons_hair')) {
             api.gainRelic('samsons_hair');
           } else {
-            api.gainRelic('strength');
+            api.gainRelic('samsons_hair');
           }
           api.resolve('map');
         }

@@ -62,5 +62,6 @@ Object.assign(window.NP_CARDS, {
       { op: 'damage', base: 22, up: 30 },
       { op: 'draw', base: 1, up: 2 }
     ]
-  }
+  },
+  manna: {id: 'manna', name: 'Manna', type: 'skill', cost: 1, rarity: 'common', target: 'self', glyph: '🫓', effects: [{op:'heal', base:7, up:10}, {op:'draw', base:1, up:1}]}
 });

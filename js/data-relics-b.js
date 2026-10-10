@@ -124,5 +124,7 @@ Object.assign(window.NP_RELICS, {
     icon: '🔒',
     hook: 'faithPerTurnCombat',
     value: 1
-  }
+  },
+  vineyard: {id: 'vineyard', name: "Naboth's Vineyard", rarity: 'common', text: 'Gain 20 gold on combat victory.', icon: '🍇', hook: 'goldOnVictory', value: 20},
+  samsons_hair: {id: 'samsons_hair', name: "Samson's Locks", rarity: 'rare', text: 'Start each combat with 3 Strength.', icon: '✂️', hook: 'combatStartStrength', value: 3}
 });
