@@ -513,6 +513,7 @@
             cards: rareCardPool(3),
             pendingRelic: getRandomRareRelic()
           };
+          G._finalVictory = true;
           G.screen = 'reward';
           G._finishing = false;
           NP_UI.renderAll();
@@ -544,6 +545,22 @@
   }
 
   function finishReward() {
+    function goForward() {
+      if (G._finalVictory) {
+        G._finalVictory = false;
+        G.score = { floor: G.run.floor, hp: G.run.hp, gold: G.run.gold, trials: G.run.trials };
+        G.meta.lastRun = G.score;
+        G.meta.bestFloor = Math.max(G.meta.bestFloor, G.run.floor);
+        save();
+        delete localStorage.np_save;
+        G.screen = 'victory';
+      } else {
+        G.screen = 'map';
+        save();
+      }
+      NP_UI.renderAll();
+    }
+
     if (G.reward && G.reward.pendingRelic) {
       const relicId = G.reward.pendingRelic;
       G.reward.pendingRelic = null;
@@ -556,18 +573,14 @@
             G.run.relics.push(relicId);
             NP_UI.modal(null);
             G.reward = null;
-            G.screen = 'map';
-            save();
-            NP_UI.renderAll();
+            goForward();
           }
         }]
       });
       return;
     }
     G.reward = null;
-    G.screen = 'map';
-    save();
-    NP_UI.renderAll();
+    goForward();
   }
 
   // Rare card pool
