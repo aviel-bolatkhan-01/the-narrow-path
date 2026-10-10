@@ -60,15 +60,14 @@ IDs are stable kebab-case strings. Instance uid = id + counter.
 ### 3.3 Card system
 - Types: attack (red ink), skill (blue ink), power (green ink), miracle (gold, costs Faith).
 - Rarities: starter, common, uncommon, rare. Card rewards: choose 1 of 3 (bias to deck archetype).
-- Upgrade: "+" versions with better numbers (defined per card: v1/v2 fields).
+- Upgrade: per-instance flag. Upgraded cards use effects[].up numbers instead of
+  base (replacement, never addition). Data must NEVER contain text functions.
 - Keywords (implement ALL): Exhaust, Ethereal, Vulnerable (take +50% attack dmg, 2 turns),
   Weak (-25% attack dmg, 2 turns), Strength (+dmg), Block (absorbs dmg, resets each turn),
   Draw, Energy, Faith, Retain, Inate (start in hand), Vulnerable-on-self, Poison-style
   "Plague" (take dmg each turn, decreases).
 - Statuses implemented as a generic map with per-turn tick logic in combat.js.
-- ~110 cards across 4 types. Starter deck: 5 Strike-variants + 4 Defend-variants +
-  1 Faith card (10 cards). Card names/themes must be biblical (e.g. "Manna",
-  "Shield of Faith", "Still Waters", "Four Horsemen", "Golden Censer").
+- ~85 cards across 4 types. Starter deck: 5× strike + 4× defend + 1× mending_prayer.
 
 ### 3.4 Relics / Potions
 - 30 relics: combat-start effects, turn triggers, on-kill, on-Shop, Faith-scaling.
@@ -136,32 +135,76 @@ floating damage numbers, combat log toggle.
 - SFX throttling: same sound ≤ 6 concurrent voices (stack via voice counter).
 
 ## 6. CONTENT SCHEMA (exact — all data files must conform)
-Card:
-  { id:'kebab', name, type:'attack'|'skill'|'power'|'miracle',
-    cost:number, faithCost?:number, rarity:'starter'|'common'|'uncommon'|'rare',
+Card (NO text functions, NO v1/v2/upgradeV1 fields, NO keywords arrays):
+  { id:'snake_case', name, type:'attack'|'skill'|'power'|'miracle',
+    cost:0..3, faithCost?:40..100 (miracles ONLY, cost must be 0),
+    rarity:'starter'|'common'|'uncommon'|'rare',
     target:'enemy'|'all'|'self'|'none',
-    text:(c)=>string,           // c = instance {upgraded}; must use c.v1/c.v2
-    v1:number, v2?:number,      // upgraded values in upgradeV1/upgradeV2
-    upgradeV1:number, upgradeV2?:number,
-    exhaust?:true, ethereal?:true, innate?:true, retain?:true,
-    keywords:['Vulnerable','Draw'...], glyph:'unicode or asset key' }
-Relic:  { id, name, rarity, text, icon }
-Potion: { id, name, text, icon }
+    glyph:'ONE emoji/unicode character',
+    effects:[ ...1..3 effects... ],
+    exhaust?:true, ethereal?:true, innate?:true, retain?:true }
+  Effect = { op:'name', base:<number>, up:<number> } — every effect: up >= base, AND
+  each card must contain at least one effect with up > base.
+  Exception: { op:'cleanse' } has no numbers.
+  damage effect may carry times:N: { op:'damage', base, up, times:2 }.
+  ALLOWED ops (use only these):
+    damage, block, faith, draw, energy, heal, strength,
+    weak, vulnerable, plague, cleanse,
+    blockPerTurn, strengthPerTurn, faithPerTurn, drawPerTurn,
+    blockPlus, weakOnAttack, thorns, combatStartStrength, combatStartBlock
+  Semantics: block/faith/draw/energy/heal/strength/cleanse/*PerTurn/blockPlus/
+    combatStart* = self. damage/weak/vulnerable/plague target enemies per card.target
+    ('enemy' = one, 'all' = every enemy). thorns/weakOnAttack are passive — no target.
+  UI auto-generates the description text from effects + flags (numbers can never lie).
+  Upgrade replaces base with up. Card instance: {uid, id, upgraded}.
+Relic:  { id, name, rarity, text, icon, hook, value, hook2?, value2? }
+  hook values (EXACT — combat.js/fireRelic dispatches by these strings):
+    startingFaith, combatStartStrength, combatStartBlock, energyPerTurn, thorns,
+    faithOnKill, faithOnEliteKill, faithPerTurnCombat, blockOnTurnStart,
+    strengthOnHurt, faithPerCardPlayed, goldOnVictory, cardRewardPlus, potionBonus,
+    drawTurn1, maxHpOnPickup, miracleDiscount
+  hook2/value2 = optional second effect on the same relic.
+  maxHpOnPickup and cardRewardPlus and goldOnVictory are handled by main.js/reward
+  screens, not combat.
+Potion: { id, name, text, icon, effect, value, turns?, target?, effect2?, value2? }
+  potion effect values: heal, block, strength (duration = turns), damage (random enemy
+  if target 'random', all if 'all'), cure (=cleanse), faith, energy.
 Enemy:  { id, name, hp:[min,max], tier:'normal'|'elite'|'boss',
           art:'assets/img/en_<id>.png',
-          moves:[{name, kind:'attack'|'defend'|'buff'|'debuff'|'special',
-                  value?, block?, effect?, times?, weight}],
-          ai:'random'|'pattern'|'cycle' }
-Event:  { id, title, text, art?, choices:[{label, result(G,resolve)}] }
-Effects are implemented as small effect-op functions in combat.js keyed by name
-('damage','block','strength','vulnerable','weak','faith','draw','heal','plague',...)
-— data files reference ops by name only, never inline code.
+          moves:[{name, kind:'attack'|'defend'|'buff'|'debuff',
+                  value?, block?, effect?, times?, weight, telegraph?}],
+          ai:'random'|'pattern' }
+  Move effect values: 'vulnerable'|'weak'|'strength'|'plague'. Multi-enemy fights are
+  built by map.js encounter tables repeating ids (['horned_imp','horned_imp']) — no count field.
+Event:  { id, title, text, choices:[{ label, result:(G,api)=>void }] }
+  After applying effects, result MUST call api.resolve('map'|'combat'|'reward'|...).
+  api methods (all implemented in main.js): addCard(id), removeCard(uidOrId),
+  upgradeRandomCard(), addCurse(id), removeAllCurses(), heal(n), healToFull(), loseHp(n),
+  loseMaxHp(n), damage(n) (combat-less HP loss with fx), gainGold(n), loseGold(n),
+  gainRelic(id), loseStartingRelic(), hasRelic(id)→bool, gainPotion(id),
+  maxHp(n) (raises maxHp), resolve(screen)
+  Curses live in window.NP_CURSES: { id, name, cost:0, type:'curse', unplayable:true,
+  text:<static string>, curse:true } — curses MAY have static text strings.
 
 ## 7. MODULE INTERFACES (contracts — do not deviate)
 NP_AUDIO: { init(), sfx(name, opts?), playScene(name), setFaithLevel(f),
             setVol(master,music,sfx), getVol(), suspend(), resume() }
 NP_FX:    { burst(x,y,{color,count,spread}), damageNumber(x,y,amount,kind),
             shake(mag,dur), flash(color), sparkles(el), setCanvas(zIndex) }
+NP_OPS:   { applyCardEffects(G, inst, def, targetIdx), hitEnemy(G, idx, base, opts?),
+            hitPlayer(G, amount, fromIdx), drawCards(G, n),
+            gainBlock(G, side, n), addStatus(G, side, status, n), tickStatuses(G, side),
+            plagueTick(G, side), enemyChooseMove(G, enemy), enemyExecute(G, enemy, move),
+            applyPotion(G, potionDef), fireRelic(G, hook, data?) }
+            side = 'player' | enemy index (number). All mutate G, no DOM access.
+            hitEnemy(G, idx, base, {fromAttack=true}): adds player strength, applies
+            player weak ×0.75 and enemy vulnerable ×1.5 (floor) when fromAttack, then
+            enemy block, returns HP lost. hitPlayer(G, amount, fromIdx): amount is
+            already modified; absorbs into playerBlock, damages hp, then thorns
+            retaliation to fromIdx (if given). enemyChooseMove picks by ai mode
+            ('random' weighted by move.weight, 'pattern' cycles moves in order),
+            writes enemy.intent for the UI. fireRelic runs every relic whose hook
+            matches (value/value2, incl. hook2).
 NP_COMBAT: { start(run,enemyIds), playCard(uid,targetUid|null), endTurn(),
              selectCard(uid), cancelSelect(), usePotion(id),
              canPlay(uid)→{ok,reason}, isOver(), result() }
