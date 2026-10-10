@@ -1,0 +1,2528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pilgrim's Ascent: Armor of God II</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700;900&family=MedievalSharp&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg-dark: #05070a;
+    --parchment: #f0e2c6;
+    --parchment-dark: #b89d70;
+    --gold: #dfb743;
+    --gold-bright: #fff2ad;
+    --gold-dark: #8c6318;
+    --gold-glow: rgba(223, 183, 67, 0.5);
+    --frame-border: rgba(140, 99, 24, 0.6);
+    --mana-glow: rgba(59, 130, 246, 0.8);
+    --font-title: 'Cinzel Decorative', 'Cinzel', serif;
+    --font-main: 'Cinzel', serif;
+    --font-body: 'MedievalSharp', cursive, serif;
+    --shadow-subtle: 0 10px 30px rgba(0, 0, 0, 0.8);
+    --view-scale: 1;
+}
+
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    background-color: var(--bg-dark);
+    color: var(--parchment);
+    font-family: var(--font-main);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#atmosphere {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+}
+#atmosphere::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.55'/></svg>");
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+}
+#atmosphere::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.45) 75%, rgba(0,0,0,0.85) 100%);
+}
+
+#viewport-wrapper {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #020305;
+}
+
+#game-view {
+    width: 1280px;
+    height: 720px;
+    position: relative;
+    background: radial-gradient(circle at 50% 30%, #1a1e2d 0%, #0b0d14 60%, #040508 100%);
+    border: 3px solid var(--gold);
+    border-radius: 10px;
+    box-shadow:
+        0 0 60px rgba(0, 0, 0, 0.95),
+        inset 0 0 60px rgba(0, 0, 0, 0.9),
+        0 0 35px var(--gold-glow),
+        inset 0 0 120px rgba(223, 183, 67, 0.05);
+    overflow: hidden;
+    transform-origin: center center;
+}
+#game-view::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        conic-gradient(from 210deg at 50% -10%, transparent 0deg, rgba(223,183,67,0.06) 15deg, transparent 30deg,
+                                        transparent 45deg, rgba(223,183,67,0.04) 60deg, transparent 75deg,
+                                        transparent 100deg, rgba(223,183,67,0.05) 115deg, transparent 130deg,
+                                        transparent 200deg, rgba(223,183,67,0.05) 215deg, transparent 230deg,
+                                        transparent 260deg, rgba(223,183,67,0.04) 275deg, transparent 290deg);
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.9;
+    animation: godrays 18s ease-in-out infinite alternate;
+}
+@keyframes godrays {
+    from { opacity: 0.7; transform: rotate(-1deg); }
+    to   { opacity: 1;   transform: rotate(1deg); }
+}
+
+#screen-flash {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 250;
+    opacity: 0;
+    background: #fff;
+    transition: opacity 0.35s ease-out;
+    mix-blend-mode: screen;
+}
+
+#particle-canvas, #targeting-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 80;
+}
+
+#top-hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 58px;
+    background: linear-gradient(180deg, rgba(18,22,34,0.95) 0%, rgba(8,10,18,0.92) 100%);
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid var(--gold-dark);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.9), 0 1px 0 rgba(223,183,67,0.3) inset;
+}
+#top-hud::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-bright), transparent);
+    opacity: 0.4;
+}
+
+.hud-group { display: flex; align-items: center; gap: 14px; }
+
+.hud-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px #000;
+    background: linear-gradient(180deg, rgba(20,24,36,0.9), rgba(8,10,16,0.9));
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(223, 183, 67, 0.35);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.6);
+}
+
+.hud-stat-icon { font-size: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
+
+.relics-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(180deg, rgba(20,24,36,0.9), rgba(8,10,16,0.9));
+    padding: 4px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--frame-border);
+    min-height: 38px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.6);
+}
+
+.relic-icon {
+    font-size: 22px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    filter: drop-shadow(0 2px 5px rgba(0,0,0,0.9));
+}
+.relic-icon:hover {
+    transform: scale(1.3) translateY(-2px);
+    filter: drop-shadow(0 0 12px var(--gold-bright)) drop-shadow(0 2px 5px rgba(0,0,0,0.9));
+}
+
+#tooltip {
+    position: absolute;
+    background: linear-gradient(180deg, rgba(18,22,34,0.97), rgba(8,10,18,0.97));
+    backdrop-filter: blur(8px);
+    border: 2px solid var(--gold);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--parchment);
+    font-size: 13px;
+    max-width: 260px;
+    pointer-events: none;
+    z-index: 300;
+    display: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.95), 0 0 20px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+#tooltip h4 { color: var(--gold-bright); margin-bottom: 4px; font-size: 15px; font-family: var(--font-title); }
+#tooltip p { font-family: var(--font-body); color: #cbd5e1; line-height: 1.4; overflow-wrap: break-word; }
+
+.view {
+    position: absolute;
+    top: 58px;
+    left: 0;
+    width: 1280px;
+    height: 662px;
+    display: none;
+    padding: 24px;
+    box-sizing: border-box;
+}
+.view.active { display: flex; flex-direction: column; }
+
+.btn {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 40%),
+        linear-gradient(180deg, #4a3822 0%, #21170d 100%);
+    border: 2px solid var(--gold);
+    color: var(--gold-bright);
+    padding: 12px 28px;
+    font-family: var(--font-main);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border-radius: 6px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -2px 6px rgba(0,0,0,0.5);
+    transition: all 0.25s ease;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    text-shadow: 0 1px 3px #000;
+    white-space: nowrap;
+}
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,242,173,0.25), transparent);
+    transition: left 0.5s ease;
+}
+.btn:hover::before { left: 100%; }
+.btn:hover {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 40%),
+        linear-gradient(180deg, var(--gold-dark) 0%, #3a2818 100%);
+    color: #fff;
+    box-shadow: 0 0 25px var(--gold-glow), 0 4px 15px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.3);
+    transform: translateY(-2px);
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; filter: grayscale(1); transform: none !important; box-shadow: none !important; }
+
+.audio-toggle-btn {
+    background: linear-gradient(180deg, rgba(20,24,36,0.9), rgba(8,10,16,0.9));
+    border: 1px solid var(--gold-dark);
+    color: var(--gold-bright);
+    padding: 6px 12px;
+    border-radius: 18px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-main);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    white-space: nowrap;
+}
+.audio-toggle-btn:hover { border-color: var(--gold-bright); transform: scale(1.05); box-shadow: 0 0 14px var(--gold-glow); }
+
+/* ============ TITLE VIEW ============ */
+#title-view {
+    justify-content: center;
+    align-items: center;
+    background:
+        radial-gradient(ellipse at 50% 20%, rgba(60, 50, 90, 0.4) 0%, transparent 55%),
+        radial-gradient(ellipse at 50% 110%, rgba(120, 40, 40, 0.35) 0%, transparent 60%),
+        radial-gradient(circle at 50% 50%, #1a1e2d 0%, #06080e 100%);
+    text-align: center;
+    overflow: hidden;
+}
+#title-view::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    transform: translateX(-50%);
+    background:
+        conic-gradient(from 180deg at 50% 50%,
+            transparent 0deg, rgba(223,183,67,0.06) 8deg, transparent 16deg,
+            transparent 30deg, rgba(223,183,67,0.04) 40deg, transparent 50deg,
+            transparent 70deg, rgba(223,183,67,0.05) 80deg, transparent 90deg,
+            transparent 120deg, rgba(223,183,67,0.04) 130deg, transparent 140deg,
+            transparent 170deg, rgba(223,183,67,0.06) 180deg, transparent 190deg,
+            transparent 220deg, rgba(223,183,67,0.04) 230deg, transparent 240deg,
+            transparent 270deg, rgba(223,183,67,0.05) 280deg, transparent 290deg,
+            transparent 320deg, rgba(223,183,67,0.04) 330deg, transparent 340deg);
+    pointer-events: none;
+    animation: slow-rotate 60s linear infinite;
+}
+@keyframes slow-rotate {
+    from { transform: translateX(-50%) rotate(0deg); }
+    to   { transform: translateX(-50%) rotate(360deg); }
+}
+
+.game-title {
+    font-family: var(--font-title);
+    font-size: 66px;
+    color: var(--gold-bright);
+    text-shadow: 0 0 40px rgba(223,183,67,0.9), 0 0 80px rgba(223,183,67,0.4), 0 6px 20px #000;
+    margin-bottom: 8px;
+    letter-spacing: 5px;
+    position: relative;
+    z-index: 2;
+    animation: title-pulse 4s ease-in-out infinite alternate;
+}
+@keyframes title-pulse {
+    from { text-shadow: 0 0 40px rgba(223,183,67,0.9), 0 0 80px rgba(223,183,67,0.4), 0 6px 20px #000; }
+    to   { text-shadow: 0 0 55px rgba(255,242,173,1), 0 0 110px rgba(223,183,67,0.7), 0 6px 20px #000; }
+}
+
+.game-subtitle {
+    font-size: 20px;
+    color: var(--parchment-dark);
+    margin-bottom: 44px;
+    font-style: italic;
+    letter-spacing: 3px;
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 2px 8px #000;
+}
+
+.class-cards { display: flex; gap: 32px; margin-bottom: 30px; position: relative; z-index: 2; }
+
+.class-card {
+    width: 270px;
+    height: 380px;
+    background: linear-gradient(180deg, rgba(40,48,70,0.7) 0%, rgba(12,15,24,0.95) 100%);
+    backdrop-filter: blur(6px);
+    border: 2px solid var(--frame-border);
+    border-radius: 14px;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: var(--shadow-subtle), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.6);
+    position: relative;
+    overflow: hidden;
+}
+.class-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(223,183,67,0.15) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.35s;
+}
+.class-card:hover::before { opacity: 1; }
+.class-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-10px) scale(1.03);
+    box-shadow: 0 20px 45px rgba(0,0,0,0.95), 0 0 35px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.15);
+    background: linear-gradient(180deg, rgba(50,60,90,0.8) 0%, rgba(18,22,34,0.95) 100%);
+}
+.class-icon { font-size: 72px; margin: 15px 0; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.9)) drop-shadow(0 0 20px rgba(223,183,67,0.3)); transition: transform 0.35s; }
+.class-card:hover .class-icon { transform: scale(1.12) translateY(-4px); }
+.class-title { font-size: 22px; color: var(--gold-bright); font-family: var(--font-title); margin-bottom: 8px; text-shadow: 0 0 15px rgba(223,183,67,0.5); }
+.class-desc { font-size: 13px; color: var(--parchment); line-height: 1.5; text-align: center; font-family: var(--font-body); overflow-wrap: break-word; }
+
+/* ============ MAP VIEW ============ */
+#map-view {
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    background:
+        radial-gradient(ellipse at 50% 120%, rgba(60, 40, 90, 0.4) 0%, transparent 60%),
+        radial-gradient(circle at 50% 50%, #131722 0%, #05070c 100%);
+    position: relative;
+    overflow: hidden;
+}
+#map-view::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60%;
+    background: radial-gradient(ellipse at 20% 100%, rgba(30,40,60,0.5) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(40,30,60,0.5) 0%, transparent 50%);
+    pointer-events: none;
+}
+.map-header { text-align: center; margin-top: 10px; z-index: 20; position: relative; }
+.map-header h2 { font-family: var(--font-title); color: var(--gold-bright); font-size: 30px; text-shadow: 0 0 20px var(--gold-glow), 0 2px 6px #000; letter-spacing: 3px; }
+#map-svg { position: absolute; top: 70px; left: 0; width: 100%; height: 540px; pointer-events: none; z-index: 5; }
+#map-tree { position: relative; width: 1000px; height: 540px; margin: 0 auto; z-index: 10; }
+
+.map-node {
+    position: absolute;
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 30%, #3a4358 0%, #1a1f2e 60%, #0d1018 100%);
+    border: 3px solid #4a5568;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    cursor: default;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.85), inset 0 2px 4px rgba(255,255,255,0.08), inset 0 -3px 8px rgba(0,0,0,0.7);
+}
+.map-node::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid rgba(223,183,67,0);
+    transition: all 0.3s;
+}
+.map-node.available {
+    border-color: var(--gold-bright);
+    background: radial-gradient(circle at 40% 30%, #6a5428 0%, #2a1f0e 60%, #100a04 100%);
+    cursor: pointer;
+    box-shadow: 0 0 30px var(--gold), 0 0 60px rgba(223,183,67,0.35), inset 0 2px 4px rgba(255,242,173,0.2), inset 0 -3px 8px rgba(0,0,0,0.7);
+    animation: pulse-node 1.6s infinite alternate;
+}
+.map-node.available::before { border-color: rgba(223,183,67,0.5); animation: pulse-ring 1.6s infinite alternate; }
+@keyframes pulse-ring {
+    0% { inset: -8px; opacity: 0.3; }
+    100% { inset: -16px; opacity: 0; }
+}
+@keyframes pulse-node {
+    0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 20px var(--gold), 0 0 40px rgba(223,183,67,0.25), inset 0 2px 4px rgba(255,242,173,0.2), inset 0 -3px 8px rgba(0,0,0,0.7); }
+    100% { transform: translate(-50%, -50%) scale(1.18); box-shadow: 0 0 35px var(--gold-bright), 0 0 70px rgba(223,183,67,0.5), inset 0 2px 4px rgba(255,242,173,0.3), inset 0 -3px 8px rgba(0,0,0,0.7); }
+}
+.map-node.visited {
+    border-color: #334155;
+    background: radial-gradient(circle at 40% 30%, #1a2030 0%, #0a0e16 100%);
+    opacity: 0.4;
+    filter: saturate(0.5);
+}
+.map-node.current {
+    border-color: #60a5fa;
+    background: radial-gradient(circle at 40% 30%, #3b82f6 0%, #1e3a8a 60%, #0a1020 100%);
+    box-shadow: 0 0 35px #3b82f6, 0 0 70px rgba(59,130,246,0.4), inset 0 2px 6px rgba(255,255,255,0.25);
+    animation: pulse-current 2s infinite alternate;
+}
+@keyframes pulse-current {
+    0% { box-shadow: 0 0 25px #3b82f6, 0 0 50px rgba(59,130,246,0.3), inset 0 2px 6px rgba(255,255,255,0.25); }
+    100% { box-shadow: 0 0 45px #60a5fa, 0 0 90px rgba(59,130,246,0.55), inset 0 2px 6px rgba(255,255,255,0.35); }
+}
+
+/* ============ COMBAT VIEW ============ */
+#combat-view {
+    justify-content: space-between;
+    position: relative;
+    background:
+        radial-gradient(ellipse at 50% 30%, rgba(60, 55, 90, 0.35) 0%, transparent 55%),
+        radial-gradient(ellipse at 50% 100%, rgba(80, 30, 30, 0.25) 0%, transparent 60%),
+        radial-gradient(circle at 50% 40%, #1b2133 0%, #07090f 85%);
+}
+#combat-view::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 25% 75%, rgba(59,130,246,0.08) 0%, transparent 40%),
+        radial-gradient(ellipse at 75% 75%, rgba(239,68,68,0.08) 0%, transparent 40%);
+    pointer-events: none;
+}
+#combat-view::after {
+    content: '';
+    position: absolute;
+    bottom: 200px;
+    left: 5%;
+    width: 90%;
+    height: 130px;
+    background: radial-gradient(ellipse at center, rgba(30, 41, 59, 0.55) 0%, rgba(0, 0, 0, 0) 70%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+#battle-field {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    width: 100%;
+    height: 400px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 130px;
+    z-index: 10;
+}
+
+.combat-entity {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    width: 220px;
+    transition: transform 0.2s ease;
+}
+
+.entity-portrait {
+    width: 180px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 100px;
+    position: relative;
+    filter: drop-shadow(0 18px 22px rgba(0,0,0,0.95));
+    transition: transform 0.25s ease;
+    animation: idle-bob 3s ease-in-out infinite alternate;
+}
+@keyframes idle-bob {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-6px); }
+}
+.entity-portrait::before {
+    content: '';
+    position: absolute;
+    inset: 5%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(223,183,67,0.18) 0%, transparent 65%);
+    filter: blur(8px);
+    z-index: -1;
+}
+
+.entity-intent {
+    position: absolute;
+    top: -52px;
+    background: linear-gradient(180deg, rgba(18,22,34,0.98) 0%, rgba(8,10,18,0.98) 100%);
+    backdrop-filter: blur(4px);
+    border: 2px solid var(--gold);
+    border-radius: 22px;
+    padding: 5px 16px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gold-bright);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.9), 0 0 18px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.15);
+    z-index: 12;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.entity-status-bar {
+    width: 200px;
+    background: linear-gradient(180deg, rgba(18,22,34,0.95) 0%, rgba(8,10,18,0.95) 100%);
+    backdrop-filter: blur(6px);
+    border: 2px solid var(--frame-border);
+    border-radius: 10px;
+    padding: 9px 12px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.entity-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gold-bright);
+    text-align: center;
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(223,183,67,0.5), 0 1px 2px #000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bar-container {
+    width: 100%;
+    height: 20px;
+    background: linear-gradient(180deg, #1a0707 0%, #2a0d0d 100%);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #451a1a;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.9), inset 0 -1px 0 rgba(255,255,255,0.05);
+}
+
+.bar-fill {
+    height: 100%;
+    background: linear-gradient(180deg, #f87171 0%, #ef4444 40%, #991b1b 100%);
+    width: 100%;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 0 10px rgba(239,68,68,0.6);
+    position: relative;
+}
+.bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px; right: 2px;
+    height: 30%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.35), transparent);
+    border-radius: 8px;
+}
+
+.bar-text {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    text-shadow: 1px 1px 3px #000, 0 0 6px rgba(0,0,0,0.8);
+    letter-spacing: 0.5px;
+}
+
+.buffs-list { display: flex; gap: 6px; justify-content: center; min-height: 22px; margin-top: 2px; flex-wrap: wrap; }
+
+.buff-badge {
+    background: linear-gradient(180deg, rgba(20,24,36,0.95), rgba(8,10,16,0.95));
+    border: 1px solid var(--gold-dark);
+    border-radius: 12px;
+    padding: 2px 9px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 6px rgba(0,0,0,0.6);
+    white-space: nowrap;
+}
+
+.combat-entity.attacking-right .entity-portrait { animation: attack-lunge-right 0.35s ease-out; }
+.combat-entity.attacking-left .entity-portrait { animation: attack-lunge-left 0.35s ease-out; }
+@keyframes attack-lunge-right {
+    0% { transform: translateX(0) translateY(0); }
+    40% { transform: translateX(50px) translateY(-8px); }
+    100% { transform: translateX(0) translateY(0); }
+}
+@keyframes attack-lunge-left {
+    0% { transform: translateX(0) translateY(0); }
+    40% { transform: translateX(-50px) translateY(-8px); }
+    100% { transform: translateX(0) translateY(0); }
+}
+
+.combat-entity.hit-flash .entity-portrait { animation: hit-flash 0.3s ease-out; }
+@keyframes hit-flash {
+    0% { filter: drop-shadow(0 18px 22px rgba(0,0,0,0.95)) brightness(1); }
+    30% { filter: drop-shadow(0 0 30px #ef4444) brightness(2.2) saturate(0.5); }
+    100% { filter: drop-shadow(0 18px 22px rgba(0,0,0,0.95)) brightness(1); }
+}
+
+.combat-entity.dying { animation: dying 0.7s ease-out forwards; }
+@keyframes dying {
+    0% { opacity: 1; transform: scale(1) rotate(0deg); }
+    100% { opacity: 0; transform: scale(0.6) rotate(-12deg) translateY(30px); }
+}
+
+#combat-dock {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 240px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 40px 22px 40px;
+    z-index: 20;
+}
+
+.energy-orb {
+    width: 104px;
+    height: 104px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #bfdbfe 0%, #60a5fa 25%, #2563eb 55%, #1e3a8a 80%, #0a1230 100%);
+    border: 3px solid #bfdbfe;
+    box-shadow: 0 0 35px var(--mana-glow), 0 0 70px rgba(59,130,246,0.4), inset 0 0 20px rgba(255,255,255,0.7), inset 0 -8px 20px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 900;
+    font-size: 36px;
+    text-shadow: 0 2px 8px #000, 0 0 15px rgba(255,255,255,0.5);
+    cursor: default;
+    z-index: 30;
+    transition: transform 0.2s;
+    position: relative;
+    animation: orb-pulse 2.5s ease-in-out infinite alternate;
+}
+@keyframes orb-pulse {
+    from { box-shadow: 0 0 30px var(--mana-glow), 0 0 60px rgba(59,130,246,0.35), inset 0 0 20px rgba(255,255,255,0.7), inset 0 -8px 20px rgba(0,0,0,0.5); }
+    to   { box-shadow: 0 0 45px rgba(96,165,250,1), 0 0 90px rgba(59,130,246,0.55), inset 0 0 25px rgba(255,255,255,0.85), inset 0 -8px 20px rgba(0,0,0,0.5); }
+}
+.energy-orb::after {
+    content: '';
+    position: absolute;
+    top: 8%; left: 20%;
+    width: 40%; height: 25%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.7), transparent 70%);
+    border-radius: 50%;
+    filter: blur(3px);
+}
+.energy-orb:hover { transform: scale(1.08); }
+.energy-orb label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #e0f2fe; margin-top: -8px; font-family: var(--font-title); }
+
+#hand-container {
+    display: flex;
+    gap: -15px;
+    justify-content: center;
+    align-items: flex-end;
+    height: 260px;
+    width: 820px;
+    z-index: 20;
+    padding-bottom: 5px;
+}
+
+.card {
+    width: 168px;
+    height: 240px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 25%), linear-gradient(160deg, #2a2218 0%, #14100b 100%);
+    border: 3px solid var(--gold);
+    border-radius: 12px;
+    padding: 10px 10px 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.22s ease;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -2px 8px rgba(0,0,0,0.7);
+    color: var(--parchment);
+    flex-shrink: 0;
+}
+.card::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 8px;
+    border: 1px solid rgba(223,183,67,0.25);
+    pointer-events: none;
+}
+.card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.15) 0%, transparent 50%);
+    pointer-events: none;
+    opacity: 0.7;
+}
+.card.type-attack { border-color: #ef4444; background: linear-gradient(180deg, rgba(255,120,120,0.12) 0%, transparent 25%), linear-gradient(160deg, #3d1717 0%, #180606 100%); box-shadow: 0 12px 28px rgba(0,0,0,0.9), 0 0 20px rgba(239,68,68,0.25), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -2px 8px rgba(0,0,0,0.7); }
+.card.type-attack::before { border-color: rgba(239,68,68,0.3); }
+.card.type-skill { border-color: #3b82f6; background: linear-gradient(180deg, rgba(120,170,255,0.12) 0%, transparent 25%), linear-gradient(160deg, #172a3d 0%, #060e18 100%); box-shadow: 0 12px 28px rgba(0,0,0,0.9), 0 0 20px rgba(59,130,246,0.25), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -2px 8px rgba(0,0,0,0.7); }
+.card.type-skill::before { border-color: rgba(59,130,246,0.3); }
+.card.type-power { border-color: #f59e0b; background: linear-gradient(180deg, rgba(255,200,100,0.12) 0%, transparent 25%), linear-gradient(160deg, #3d2f17 0%, #180f04 100%); box-shadow: 0 12px 28px rgba(0,0,0,0.9), 0 0 20px rgba(245,158,11,0.25), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -2px 8px rgba(0,0,0,0.7); }
+.card.type-power::before { border-color: rgba(245,158,11,0.3); }
+.card:hover { transform: translateY(-50px) scale(1.15) !important; z-index: 100 !important; box-shadow: 0 25px 50px rgba(0,0,0,0.98), 0 0 35px var(--gold-bright), inset 0 1px 0 rgba(255,255,255,0.2); }
+.card.unplayable { filter: grayscale(0.9) brightness(0.45); cursor: not-allowed; }
+
+.card-cost {
+    position: absolute;
+    top: -14px; left: -14px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, #ffffff 0%, #bfdbfe 18%, #60a5fa 45%, #2563eb 75%, #1e3a8a 100%);
+    border: 2px solid #dbeafe;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.9), 0 0 20px rgba(59, 130, 246, 0.9), inset 0 -4px 8px rgba(0,0,0,0.4), inset 0 3px 6px rgba(255,255,255,0.5);
+    z-index: 5;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+.card-cost::after {
+    content: '';
+    position: absolute;
+    top: 6px; left: 10px;
+    width: 40%; height: 20%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.9), transparent 70%);
+    border-radius: 50%;
+    filter: blur(1px);
+}
+
+.card-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--gold-bright);
+    text-align: center;
+    margin-top: 4px;
+    border-bottom: 1px solid var(--frame-border);
+    padding-bottom: 4px;
+    font-family: var(--font-title);
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 8px rgba(223,183,67,0.5), 0 1px 2px #000;
+    line-height: 1.15;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.card-icon { font-size: 48px; text-align: center; margin: 4px 0; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.9)) drop-shadow(0 0 12px rgba(223,183,67,0.25)); transition: transform 0.3s; }
+.card:hover .card-icon { transform: scale(1.1); }
+
+.card-art-window {
+    position: relative;
+    height: 78px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 45%, rgba(255,255,255,0.08) 0%, transparent 70%);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 2px 0;
+}
+.card.type-attack .card-art-window { background: radial-gradient(circle at 50% 45%, rgba(239,68,68,0.18) 0%, transparent 70%); }
+.card.type-skill .card-art-window { background: radial-gradient(circle at 50% 45%, rgba(59,130,246,0.18) 0%, transparent 70%); }
+.card.type-power .card-art-window { background: radial-gradient(circle at 50% 45%, rgba(245,158,11,0.18) 0%, transparent 70%); }
+
+.card-desc {
+    font-size: 11.5px;
+    font-family: var(--font-body);
+    text-align: center;
+    color: #f1f5f9;
+    line-height: 1.35;
+    background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.25) 100%);
+    padding: 6px 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.07);
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 0 1px 2px #000;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.card-type-label { font-size: 9px; text-transform: uppercase; letter-spacing: 2px; text-align: center; color: var(--parchment-dark); margin-top: 3px; font-weight: bold; text-shadow: 0 1px 2px #000; }
+.card.type-attack .card-type-label { color: #f87171; }
+.card.type-skill .card-type-label { color: #60a5fa; }
+.card.type-power .card-type-label { color: #fbbf24; }
+
+.deck-pile-btn {
+    width: 78px;
+    height: 92px;
+    background: linear-gradient(180deg, rgba(28,34,50,0.95) 0%, rgba(10,13,20,0.95) 100%);
+    backdrop-filter: blur(6px);
+    border: 2px solid var(--frame-border);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 26px;
+    transition: all 0.25s;
+    position: relative;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 6px rgba(0,0,0,0.6);
+}
+.deck-pile-btn:hover { border-color: var(--gold); transform: scale(1.1) translateY(-3px); box-shadow: 0 0 25px var(--gold-glow), 0 8px 18px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.15); }
+
+.deck-pile-count {
+    position: absolute;
+    bottom: -12px;
+    background: linear-gradient(180deg, var(--gold-bright) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+    color: #1a1008;
+    font-size: 12px;
+    font-weight: 900;
+    padding: 2px 12px;
+    border-radius: 12px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.5);
+    text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+    border: 1px solid rgba(140,99,24,0.8);
+}
+
+/* ============ SHOP VIEW (REDESIGNED) ============ */
+#shop-view {
+    align-items: center;
+    justify-content: flex-start;
+    background: radial-gradient(ellipse at 50% 0%, rgba(120,80,30,0.15) 0%, transparent 60%), radial-gradient(circle, #1a1726 0%, #06040e 100%);
+    padding: 20px 24px;
+    position: relative;
+    gap: 6px;
+}
+
+.leave-shop-btn {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    padding: 8px 18px;
+    font-size: 12px;
+    z-index: 50;
+    letter-spacing: 1px;
+}
+
+.shop-banner {
+    font-family: var(--font-title);
+    font-size: 30px;
+    color: var(--gold-bright);
+    text-align: center;
+    margin-top: 4px;
+    text-shadow: 0 0 25px var(--gold-glow), 0 3px 8px #000;
+    letter-spacing: 3px;
+    margin-bottom: 6px;
+}
+
+.shop-layout {
+    display: flex;
+    align-items: stretch;
+    gap: 16px;
+    width: 100%;
+    max-width: 1180px;
+    flex: 1;
+}
+
+.shop-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+    background: linear-gradient(180deg, rgba(18,22,34,0.7) 0%, rgba(8,10,18,0.7) 100%);
+    border: 1px solid var(--frame-border);
+    border-radius: 12px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 6px 20px rgba(0,0,0,0.7);
+}
+
+.shop-section-cards { flex: 0 0 auto; }
+.shop-section-relics { flex: 1 1 auto; min-width: 320px; }
+.shop-section-purge { flex: 0 0 220px; }
+
+.shop-divider {
+    width: 1px;
+    align-self: stretch;
+    background: linear-gradient(180deg, transparent, var(--frame-border) 30%, var(--frame-border) 70%, transparent);
+}
+
+.shop-section-title {
+    font-family: var(--font-title);
+    font-size: 16px;
+    color: var(--gold-bright);
+    text-shadow: 0 0 10px rgba(223,183,67,0.4);
+    letter-spacing: 1.5px;
+    border-bottom: 1px solid rgba(223,183,67,0.2);
+    padding-bottom: 6px;
+    margin-bottom: 2px;
+}
+
+.shop-cards-row {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.shop-relics-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.shop-card-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.shop-card-item .card {
+    cursor: default;
+    animation: none;
+}
+.shop-card-item .card:hover {
+    transform: translateY(-6px) scale(1.04) !important;
+    z-index: 10;
+}
+
+.shop-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    padding: 4px 0;
+}
+
+.shop-relic-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 14px;
+    background: linear-gradient(180deg, rgba(30,38,55,0.7) 0%, rgba(15,18,28,0.7) 100%);
+    border: 1px solid var(--frame-border);
+    border-radius: 10px;
+    transition: all 0.25s;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.6);
+}
+.shop-relic-item:hover {
+    border-color: var(--gold);
+    box-shadow: 0 0 20px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.shop-relic-icon {
+    font-size: 42px;
+    filter: drop-shadow(0 4px 8px #000) drop-shadow(0 0 12px rgba(223,183,67,0.4));
+    flex-shrink: 0;
+}
+
+.shop-relic-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.shop-relic-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--gold-bright);
+    font-family: var(--font-title);
+    text-shadow: 0 0 8px rgba(223,183,67,0.5);
+    overflow-wrap: break-word;
+}
+
+.shop-relic-desc {
+    font-size: 11px;
+    font-family: var(--font-body);
+    color: #cbd5e1;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.shop-relic-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.shop-item-price {
+    color: var(--gold-bright);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    text-shadow: 0 0 8px rgba(223,183,67,0.5), 0 1px 2px #000;
+    white-space: nowrap;
+}
+
+.shop-buy-btn {
+    padding: 6px 16px;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+.shop-purge-block {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.shop-purge-desc {
+    font-size: 12px;
+    font-family: var(--font-body);
+    color: var(--parchment);
+    line-height: 1.5;
+    overflow-wrap: break-word;
+}
+
+/* ============ REST VIEW ============ */
+#rest-view {
+    align-items: center;
+    justify-content: space-between;
+    background: radial-gradient(ellipse at 50% 0%, rgba(120,80,30,0.15) 0%, transparent 60%), radial-gradient(circle, #1a1726 0%, #06040e 100%);
+}
+
+.rest-banner {
+    font-family: var(--font-title);
+    font-size: 36px;
+    color: var(--gold-bright);
+    text-align: center;
+    margin-top: 10px;
+    text-shadow: 0 0 25px var(--gold-glow), 0 3px 8px #000;
+    letter-spacing: 3px;
+}
+
+.rest-options { display: flex; gap: 60px; margin: auto 0; }
+
+.rest-card {
+    width: 300px;
+    height: 340px;
+    background: linear-gradient(180deg, rgba(28,34,50,0.95) 0%, rgba(12,15,24,0.95) 100%);
+    backdrop-filter: blur(8px);
+    border: 2px solid var(--frame-border);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    padding: 24px;
+    box-shadow: var(--shadow-subtle), inset 0 1px 0 rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+}
+.rest-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 30%, rgba(223,183,67,0.15) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.35s;
+}
+.rest-card:hover::before { opacity: 1; }
+.rest-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 45px rgba(0,0,0,0.95), 0 0 35px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.15);
+    background: linear-gradient(180deg, rgba(40,50,75,0.95) 0%, rgba(18,22,34,0.95) 100%);
+}
+.rest-card-icon { font-size: 80px; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.9)) drop-shadow(0 0 25px rgba(223,183,67,0.4)); transition: transform 0.35s; }
+.rest-card:hover .rest-card-icon { transform: scale(1.12); }
+.rest-card-title { font-size: 26px; color: var(--gold-bright); font-family: var(--font-title); text-shadow: 0 0 15px rgba(223,183,67,0.5); }
+.rest-card-desc { font-size: 14px; text-align: center; color: var(--parchment); font-family: var(--font-body); line-height: 1.5; overflow-wrap: break-word; }
+
+/* ============ MODALS ============ */
+.modal-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: radial-gradient(circle at center, rgba(10,14,22,0.95) 0%, rgba(2,3,6,0.98) 100%);
+    backdrop-filter: blur(12px);
+    z-index: 200;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+.modal-overlay.active { display: flex; }
+
+.modal-title {
+    font-family: var(--font-title);
+    font-size: 40px;
+    color: var(--gold-bright);
+    margin-bottom: 20px;
+    text-shadow: 0 0 30px var(--gold-glow), 0 3px 10px #000;
+    letter-spacing: 3px;
+    text-align: center;
+}
+
+.reward-cards-container { display: flex; gap: 32px; margin: 30px 0; }
+
+.deck-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+    max-height: 480px;
+    overflow-y: auto;
+    padding: 24px;
+    justify-content: center;
+    width: 1040px;
+    background: linear-gradient(180deg, rgba(18,22,34,0.9) 0%, rgba(8,10,18,0.9) 100%);
+    border: 1px solid var(--frame-border);
+    border-radius: 14px;
+    box-shadow: inset 0 0 30px #000, 0 8px 30px rgba(0,0,0,0.8);
+}
+.deck-grid::-webkit-scrollbar { width: 10px; }
+.deck-grid::-webkit-scrollbar-track { background: rgba(0,0,0,0.4); border-radius: 5px; }
+.deck-grid::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--gold-dark), #3a2818); border-radius: 5px; border: 1px solid rgba(223,183,67,0.3); }
+
+.shake { animation: shake-anim 0.35s ease-in-out; }
+@keyframes shake-anim {
+    0%, 100% { transform: scale(var(--view-scale, 1)) translate(0, 0); }
+    15% { transform: scale(var(--view-scale, 1)) translate(-10px, 7px); }
+    30% { transform: scale(var(--view-scale, 1)) translate(10px, -7px); }
+    45% { transform: scale(var(--view-scale, 1)) translate(-8px, 5px); }
+    60% { transform: scale(var(--view-scale, 1)) translate(8px, -5px); }
+    80% { transform: scale(var(--view-scale, 1)) translate(-4px, 2px); }
+}
+</style>
+</head>
+<body>
+
+<div id="atmosphere"></div>
+
+<div id="viewport-wrapper">
+    <div id="game-view">
+        <div id="screen-flash"></div>
+        <canvas id="particle-canvas"></canvas>
+        <canvas id="targeting-canvas"></canvas>
+
+        <div id="top-hud">
+            <div class="hud-group">
+                <div class="hud-stat"><span class="hud-stat-icon">👤</span> <span id="hud-class">Pilgrim</span></div>
+                <div class="hud-stat" style="color: #f87171;"><span class="hud-stat-icon">❤️</span> <span id="hud-hp">80 / 80</span></div>
+                <div class="hud-stat" style="color: #fde047;"><span class="hud-stat-icon">🪙</span> <span id="hud-gold">99</span></div>
+            </div>
+            <div class="hud-group">
+                <div class="relics-bar" id="hud-relics"></div>
+                <div class="hud-stat"><span class="hud-stat-icon">🗺️</span> Floor <span id="hud-floor">1</span></div>
+                <button class="audio-toggle-btn" id="hud-audio-btn" onclick="audio.toggleMute()">🎵 Audio: ON</button>
+                <button class="btn" id="hud-deck-btn" style="padding: 6px 16px; font-size: 13px;" onclick="game.openDeckModal('view')">Deck (<span id="hud-deck-size">0</span>)</button>
+            </div>
+        </div>
+
+        <div id="tooltip">
+            <h4 id="tt-title">Relic Name</h4>
+            <p id="tt-desc">Description goes here.</p>
+        </div>
+
+        <!-- 1. TITLE VIEW -->
+        <div id="title-view" class="view active">
+            <h1 class="game-title">PILGRIM'S ASCENT</h1>
+            <p class="game-subtitle">Armor of God II — Slay the Shadows</p>
+
+            <div class="class-cards">
+                <div class="class-card" onclick="game.selectClass('knight')">
+                    <div class="class-title">Knight of Faith</div>
+                    <div class="class-icon">🛡️</div>
+                    <div class="class-desc">Starts with heavy defenses and the Shield of Faith (+4 Block at start of combat).</div>
+                    <button class="btn" style="width: 100%; margin-top: 10px;">Select Class</button>
+                </div>
+                <div class="class-card" onclick="game.selectClass('prophet')">
+                    <div class="class-title">Prophet of Flame</div>
+                    <div class="class-icon">📖</div>
+                    <div class="class-desc">Wields righteous holy powers and Elijah's Mantle (+2 Strength at start of combat).</div>
+                    <button class="btn" style="width: 100%; margin-top: 10px;">Select Class</button>
+                </div>
+                <div class="class-card" onclick="game.selectClass('psalmist')">
+                    <div class="class-title">Psalmist of Grace</div>
+                    <div class="class-icon">🎶</div>
+                    <div class="class-desc">Restores health through song and carries David's Harp (+1 Energy on turn 1).</div>
+                    <button class="btn" style="width: 100%; margin-top: 10px;">Select Class</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. MAP VIEW -->
+        <div id="map-view" class="view">
+            <div class="map-header">
+                <h2>THE PATH OF ASCENT</h2>
+                <p style="color: var(--parchment-dark); font-size: 14px; font-family: var(--font-body);">Choose an available sanctuary or battle site to advance.</p>
+            </div>
+            <svg id="map-svg"></svg>
+            <div id="map-tree"></div>
+        </div>
+
+        <!-- 3. COMBAT VIEW -->
+        <div id="combat-view" class="view">
+            <div id="battle-field">
+                <div id="player-entity" class="combat-entity">
+                    <div class="entity-portrait">👤</div>
+                    <div class="entity-status-bar">
+                        <div class="entity-name" id="player-name">Pilgrim</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" id="player-hp-bar"></div>
+                            <div class="bar-text" id="player-hp-text">80/80</div>
+                        </div>
+                        <div class="buffs-list" id="player-buffs"></div>
+                    </div>
+                </div>
+                <div id="enemies-area" style="display: flex; gap: 50px;"></div>
+            </div>
+
+            <div id="combat-dock">
+                <div class="deck-pile-btn" id="draw-pile-btn" onclick="game.openDeckModal('draw')">
+                    📜
+                    <div class="deck-pile-count" id="draw-count">0</div>
+                </div>
+                <div class="energy-orb">
+                    <span id="energy-val">3/3</span>
+                    <label>SP</label>
+                </div>
+                <div id="hand-container"></div>
+                <button class="btn" id="end-turn-btn" onclick="game.combat.endTurn()">End Turn</button>
+                <div class="deck-pile-btn" id="discard-pile-btn" onclick="game.openDeckModal('discard')">
+                    🗑️
+                    <div class="deck-pile-count" id="discard-count">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. SHOP VIEW (REDESIGNED) -->
+        <div id="shop-view" class="view">
+            <button class="btn leave-shop-btn" onclick="game.leaveNode()">← Leave Shop</button>
+            <div class="shop-banner">💰 THE HOLY MERCHANT</div>
+            <div class="shop-layout">
+                <div class="shop-section shop-section-cards">
+                    <div class="shop-section-title">Cards for Sale</div>
+                    <div class="shop-cards-row" id="shop-cards"></div>
+                </div>
+                <div class="shop-divider"></div>
+                <div class="shop-section shop-section-relics">
+                    <div class="shop-section-title">Sacred Relics</div>
+                    <div class="shop-relics-col" id="shop-relics"></div>
+                </div>
+                <div class="shop-divider"></div>
+                <div class="shop-section shop-section-purge">
+                    <div class="shop-section-title">Purge Service</div>
+                    <div class="shop-purge-block">
+                        <div class="shop-purge-desc">Remove a card permanently from your deck for 75 gold.</div>
+                        <button class="btn" id="shop-purge-btn" onclick="game.shopPurgeCard()" style="padding: 10px 18px; font-size: 13px;">Purge Card (75g)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. REST VIEW -->
+        <div id="rest-view" class="view">
+            <div class="rest-banner">🔥 SANCTUARY CAMPFIRE</div>
+            <div class="rest-options">
+                <div class="rest-card" onclick="game.restHeal()">
+                    <div class="rest-card-icon">💖</div>
+                    <div class="rest-card-title">Rest & Pray</div>
+                    <div class="rest-card-desc">Restore 30% of your Max HP (<span id="rest-heal-amt">24</span> HP).</div>
+                </div>
+                <div class="rest-card" onclick="game.openForgeModal()">
+                    <div class="rest-card-icon">🔨</div>
+                    <div class="rest-card-title">Forge Armor</div>
+                    <div class="rest-card-desc">Upgrade a card in your deck permanently to boost its stats.</div>
+                </div>
+            </div>
+            <button class="btn" onclick="game.leaveNode()" style="margin-bottom: 20px;">Continue Journey</button>
+        </div>
+
+        <!-- MODALS -->
+        <div id="reward-modal" class="modal-overlay">
+            <h2 class="modal-title">VICTORY REWARDS</h2>
+            <div style="font-size: 20px; color: var(--gold-bright); margin-bottom: 12px; text-shadow: 0 0 12px var(--gold-glow); text-align: center;" id="reward-gold-text">Gained +25 Gold</div>
+            <div class="reward-cards-container" id="reward-cards"></div>
+            <button class="btn" onclick="game.closeRewardModal()">Skip / Continue</button>
+        </div>
+
+        <div id="deck-modal" class="modal-overlay">
+            <h2 class="modal-title" id="deck-modal-title">YOUR DECK</h2>
+            <div class="deck-grid" id="deck-modal-grid"></div>
+            <button class="btn" onclick="game.closeDeckModal()" style="margin-top: 20px;">Close</button>
+        </div>
+
+        <div id="defeat-modal" class="modal-overlay">
+            <h2 class="modal-title" style="color: #ef4444; text-shadow: 0 0 30px rgba(239,68,68,0.8), 0 3px 10px #000;">YOU HAVE FALLEN</h2>
+            <p style="font-size: 18px; color: var(--parchment); margin-bottom: 30px; font-family: var(--font-body);">The dark forces claim this path, but faith endures forever.</p>
+            <button class="btn" onclick="game.restartGame()">Pray & Rise Again</button>
+        </div>
+
+        <div id="victory-modal" class="modal-overlay">
+            <h2 class="modal-title" style="color: #fde047; text-shadow: 0 0 40px rgba(253,224,71,0.9), 0 3px 10px #000;">ASCENSION COMPLETE!</h2>
+            <p style="font-size: 18px; color: var(--parchment); margin-bottom: 30px; font-family: var(--font-body);">You have vanquished the Arch-Fiend and conquered the shadows.</p>
+            <button class="btn" onclick="game.restartGame()">Begin New Pilgrimage</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const CONFIG = { w: 1280, h: 720, mapFloors: 7, maxEnergy: 3, handSize: 5 };
+
+    const CARDS_DB = {
+        'strike':      { name: 'Strike',          cost: 1, type: 'attack', icon: '⚔️', val: 6,  desc: (c) => `Deal ${c.val} damage.` },
+        'defend':      { name: 'Defend',          cost: 1, type: 'skill',  icon: '🛡️', val: 5,  desc: (c) => `Gain ${c.val} Block.` },
+        'bash':        { name: 'Righteous Bash',  cost: 2, type: 'attack', icon: '🔨', val: 10, val2: 2, desc: (c) => `Deal ${c.val} damage and apply ${c.val2} Vulnerable.` },
+        'cleave':      { name: 'Holy Cleave',     cost: 1, type: 'attack', icon: '💥', val: 8,  desc: (c) => `Deal ${c.val} damage to ALL enemies.` },
+        'fortify':     { name: 'Fortify',         cost: 2, type: 'skill',  icon: '🏰', val: 14, desc: (c) => `Gain ${c.val} Block.` },
+        'smite':       { name: 'Divine Smite',    cost: 2, type: 'attack', icon: '⚡', val: 16, desc: (c) => `Deal ${c.val} damage.` },
+        'prayer':      { name: 'Fervent Prayer',  cost: 1, type: 'skill',  icon: '🙏', val: 2,  desc: (c) => `Draw ${c.val} cards.` },
+        'blessing':    { name: 'Grace Blessing',  cost: 0, type: 'skill',  icon: '✨', val: 4,  desc: (c) => `Gain ${c.val} Block and draw 1 card.` },
+        'power_zeal':  { name: 'Zeal Power',      cost: 1, type: 'power',  icon: '🔥', val: 2,  desc: (c) => `Gain +${c.val} Strength permanently in battle.` },
+        'power_iron':  { name: 'Iron Faith',      cost: 1, type: 'power',  icon: '🧱', val: 3,  desc: (c) => `At start of turn, gain +${c.val} Block.` },
+        'shield_slam': { name: 'Shield Slam',     cost: 1, type: 'attack', icon: '🛡️', val: 0,  desc: () => `Deal damage equal to current Block.` },
+        'holy_fire':   { name: 'Holy Fire',       cost: 2, type: 'attack', icon: '🔥', val: 12, val2: 2, desc: (c) => `Deal ${c.val} damage & apply ${c.val2} Vulnerable to ALL.` },
+        'hymn':        { name: 'Seraph Hymn',     cost: 1, type: 'skill',  icon: '🎵', val: 8,  desc: (c) => `Gain ${c.val} Block & draw 2 cards.` }
+    };
+
+    const RELICS_DB = {
+        'shield_faith':   { id: 'shield_faith',   name: 'Shield of Faith',   icon: '🛡️', desc: 'Start every combat with +4 Block.' },
+        'mantle_elijah':  { id: 'mantle_elijah',  name: "Mantle of Elijah",  icon: '📖', desc: 'Start every combat with +2 Strength.' },
+        'harp_david':     { id: 'harp_david',     name: 'Harp of David',     icon: '🎶', desc: 'Gain +1 Energy on Turn 1 of combat.' },
+        'holy_grail':     { id: 'holy_grail',     name: 'Holy Grail',        icon: '🏆', desc: 'Increases Max HP by +12 upon pickup.' },
+        'crown_thorns':   { id: 'crown_thorns',   name: 'Crown of Thorns',   icon: '👑', desc: 'Whenever you take attack damage, deal 3 damage back.' },
+        'golden_censer':  { id: 'golden_censer',  name: 'Golden Censer',     icon: '🕯️', desc: 'Earn +15 bonus Gold from every victory.' }
+    };
+
+    class ProceduralAudioEngine {
+        constructor() {
+            this.ctx = null; this.masterGain = null; this.sfxGain = null; this.musicGain = null;
+            this.isMuted = false; this.currentTheme = null; this.step = 0; this.timer = null;
+            this.pitches = {
+                'C1':32.70,'D1':36.71,'Eb1':38.89,'E1':41.20,'F1':43.65,'G1':49.00,'A1':55.00,'Bb1':58.27,'B1':61.74,
+                'C2':65.41,'D2':73.42,'Eb2':77.78,'E2':82.41,'F2':87.31,'F#2':92.50,'G2':98.00,'Ab2':103.83,'A2':110.00,'Bb2':116.54,'B2':123.47,
+                'C3':130.81,'C#3':138.59,'D3':146.83,'Eb3':155.56,'E3':164.81,'F3':174.61,'F#3':185.00,'G3':196.00,'G#3':207.65,'A3':220.00,'Bb3':233.08,'B3':246.94,
+                'C4':261.63,'C#4':277.18,'D4':293.66,'Eb4':311.13,'E4':329.63,'F4':349.23,'F#4':369.99,'G4':392.00,'G#4':415.30,'A4':440.00,'Bb4':466.16,'B4':493.88,
+                'C5':523.25,'D5':587.33,'E5':659.25,'F5':698.46,'G5':783.99,'A5':880.00
+            };
+            this.themes = {
+                'title':         { tempo: 80,  bass: ['D2',null,'F2',null,'A2',null,'C3',null,'D2',null,'G2',null,'A2',null,'F2',null], melody: ['D4','F4','A4','D5','C5','A4','F4','E4','D4','F4','G4','A4','F4','E4','D4','A3'], pad: ['D3','F3','A3','C4'], wave: 'sine', perc: false },
+                'map':           { tempo: 95,  bass: ['G2',null,'D3',null,'B2',null,'G2',null,'C3',null,'G3',null,'D3',null,'D2',null], melody: ['G4','B4','D5','F#5','E5','D5','B4','G4','C5','E5','G5','F#5','D5','B4','A4','G4'], pad: ['G3','B3','D4','F#4'], wave: 'triangle', perc: false },
+                'battle_normal': { tempo: 125, bass: ['A1','A1','C2','A1','D2','A1','E2','G1','A1','A1','C2','A1','G1','E1','G1','A1'], melody: ['A3','C4','E4','A4','G4','E4','C4','B3','A3','C4','D4','E4','G4','E4','D4','C4'], pad: ['A2','C3','E3'], wave: 'sawtooth', perc: true },
+                'battle_elite':  { tempo: 138, bass: ['D1','D1','F1','D1','G1','D1','G#1','A1','D1','D1','F1','D1','C2','Bb1','A1','G1'], melody: ['D4','F4','G#4','A4','F4','D4','C#4','D4','F4','G#4','A4','D5','C5','G#4','F4','E4'], pad: ['D3','F3','G#3','A3'], wave: 'sawtooth', perc: true },
+                'battle_boss':   { tempo: 150, bass: ['C1','C1','Eb1','C1','F1','C1','Gb1','G1','C1','C1','Eb1','C1','Bb1','Ab1','G1','F1'], melody: ['C4','Eb4','G4','C5','B4','Ab4','G4','F4','Eb4','G4','C5','Eb5','D5','B4','G4','F4'], pad: ['C3','Eb3','G3','B3'], wave: 'sawtooth', perc: true },
+                'shop':          { tempo: 105, bass: ['F2',null,'A2',null,'C3',null,'F2',null,'Bb2',null,'D3',null,'C3',null,'C2',null], melody: ['F4','A4','C5','E5','D5','C5','A4','F4','Bb4','D5','F5','E5','C5','A4','G4','F4'], pad: ['F3','A3','C4','E4'], wave: 'triangle', perc: false },
+                'rest':          { tempo: 75,  bass: ['C2',null,'G2',null,'A2',null,'F2',null,'C2',null,'Em2',null,'F2',null,'G2',null], melody: ['C4','E4','G4','B4','C5','B4','G4','E4','A4','C5','E5','D5','B4','G4','E4','C4'], pad: ['C3','E3','G3','B3'], wave: 'sine', perc: false }
+            };
+        }
+        init() {
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.masterGain = this.ctx.createGain(); this.sfxGain = this.ctx.createGain(); this.musicGain = this.ctx.createGain();
+                this.masterGain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+                this.sfxGain.gain.setValueAtTime(0.7, this.ctx.currentTime);
+                this.musicGain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                this.sfxGain.connect(this.masterGain); this.musicGain.connect(this.masterGain); this.masterGain.connect(this.ctx.destination);
+            }
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+        }
+        toggleMute() {
+            this.init();
+            this.isMuted = !this.isMuted;
+            if (this.masterGain) this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.5, this.ctx.currentTime);
+            const btn = document.getElementById('hud-audio-btn');
+            if (btn) btn.innerText = this.isMuted ? '🔇 Audio: OFF' : '🎵 Audio: ON';
+        }
+        play(sfx) {
+            if (this.isMuted) return;
+            this.init();
+            const now = this.ctx.currentTime;
+            if (sfx === 'click') {
+                const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(520, now); osc.frequency.exponentialRampToValueAtTime(180, now + 0.06);
+                gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+                osc.connect(gain); gain.connect(this.sfxGain); osc.start(now); osc.stop(now + 0.06);
+            } else if (sfx === 'slash') {
+                const bufferSize = this.ctx.sampleRate * 0.15;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                const noise = this.ctx.createBufferSource(); noise.buffer = buffer;
+                const filter = this.ctx.createBiquadFilter(); filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1800, now); filter.frequency.exponentialRampToValueAtTime(200, now + 0.15); filter.Q.value = 3;
+                const gain = this.ctx.createGain(); gain.gain.setValueAtTime(0.6, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                noise.connect(filter); filter.connect(gain); gain.connect(this.sfxGain); noise.start(now);
+                const sub = this.ctx.createOscillator(); const subGain = this.ctx.createGain();
+                sub.type = 'sawtooth'; sub.frequency.setValueAtTime(160, now); sub.frequency.exponentialRampToValueAtTime(40, now + 0.14);
+                subGain.gain.setValueAtTime(0.4, now); subGain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+                sub.connect(subGain); subGain.connect(this.sfxGain); sub.start(now); sub.stop(now + 0.14);
+            } else if (sfx === 'block') {
+                const osc = this.ctx.createOscillator(); const osc2 = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                osc.type = 'sine'; osc2.type = 'triangle';
+                osc.frequency.setValueAtTime(220, now); osc2.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(320, now + 0.18); osc2.frequency.exponentialRampToValueAtTime(640, now + 0.18);
+                gain.gain.setValueAtTime(0.35, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+                osc.connect(gain); osc2.connect(gain); gain.connect(this.sfxGain);
+                osc.start(now); osc2.start(now); osc.stop(now + 0.18); osc2.stop(now + 0.18);
+            } else if (sfx === 'power' || sfx === 'spell') {
+                [392.00, 523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+                    gain.gain.setValueAtTime(0.18, now + idx * 0.04); gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.25);
+                    osc.connect(gain); gain.connect(this.sfxGain); osc.start(now + idx * 0.04); osc.stop(now + idx * 0.04 + 0.25);
+                });
+            } else if (sfx === 'gold') {
+                [987.77, 1318.51, 1567.98].forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(freq, now + i * 0.06);
+                    gain.gain.setValueAtTime(0.2, now + i * 0.06); gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.06 + 0.18);
+                    osc.connect(gain); gain.connect(this.sfxGain); osc.start(now + i * 0.06); osc.stop(now + i * 0.06 + 0.18);
+                });
+            } else if (sfx === 'hurt') {
+                const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, now); osc.frequency.linearRampToValueAtTime(30, now + 0.25);
+                gain.gain.setValueAtTime(0.5, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain); gain.connect(this.sfxGain); osc.start(now); osc.stop(now + 0.25);
+            } else if (sfx === 'victory') {
+                [261.63, 329.63, 392.00, 523.25].forEach(freq => {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+                    osc.connect(gain); gain.connect(this.sfxGain); osc.start(now); osc.stop(now + 0.8);
+                });
+            }
+        }
+        playTheme(themeKey) {
+            this.init();
+            if (this.currentTheme === themeKey) return;
+            this.currentTheme = themeKey;
+            if (this.timer) clearInterval(this.timer);
+            const theme = this.themes[themeKey] || this.themes['map'];
+            this.step = 0;
+            const stepInterval = (60 / theme.tempo / 4) * 1000;
+            this.timer = setInterval(() => {
+                if (!this.isMuted && this.ctx) this.triggerMusicStep(theme, this.step);
+                this.step = (this.step + 1) % 16;
+            }, stepInterval);
+        }
+        triggerMusicStep(theme, step) {
+            const now = this.ctx.currentTime;
+            const dur = (60 / theme.tempo / 4);
+            const bassNote = theme.bass[step];
+            if (bassNote && this.pitches[bassNote]) {
+                const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain(); const filter = this.ctx.createBiquadFilter();
+                osc.type = theme.wave || 'sawtooth'; osc.frequency.setValueAtTime(this.pitches[bassNote], now);
+                filter.type = 'lowpass'; filter.frequency.setValueAtTime(450, now);
+                gain.gain.setValueAtTime(0.22, now); gain.gain.exponentialRampToValueAtTime(0.001, now + dur * 1.5);
+                osc.connect(filter); filter.connect(gain); gain.connect(this.musicGain);
+                osc.start(now); osc.stop(now + dur * 1.5);
+            }
+            const melNote = theme.melody[step];
+            if (melNote && this.pitches[melNote]) {
+                const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(this.pitches[melNote], now);
+                gain.gain.setValueAtTime(0.12, now); gain.gain.exponentialRampToValueAtTime(0.001, now + dur * 1.2);
+                osc.connect(gain); gain.connect(this.musicGain); osc.start(now); osc.stop(now + dur * 1.2);
+            }
+            if (step % 8 === 0 && theme.pad) {
+                theme.pad.forEach(padNote => {
+                    if (this.pitches[padNote]) {
+                        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                        osc.type = 'sine'; osc.frequency.setValueAtTime(this.pitches[padNote], now);
+                        gain.gain.setValueAtTime(0.04, now); gain.gain.exponentialRampToValueAtTime(0.001, now + dur * 7);
+                        osc.connect(gain); gain.connect(this.musicGain); osc.start(now); osc.stop(now + dur * 7);
+                    }
+                });
+            }
+            if (theme.perc) {
+                if (step % 4 === 0) {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(130, now); osc.frequency.exponentialRampToValueAtTime(30, now + 0.08);
+                    gain.gain.setValueAtTime(0.35, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                    osc.connect(gain); gain.connect(this.musicGain); osc.start(now); osc.stop(now + 0.08);
+                } else if (step % 4 === 2) {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(350, now); osc.frequency.exponentialRampToValueAtTime(80, now + 0.05);
+                    gain.gain.setValueAtTime(0.12, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.connect(gain); gain.connect(this.musicGain); osc.start(now); osc.stop(now + 0.05);
+                }
+            }
+        }
+    }
+
+    const audio = new ProceduralAudioEngine();
+
+    class ParticleEngine {
+        constructor() {
+            this.canvas = document.getElementById('particle-canvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.particles = []; this.embers = [];
+            this.canvas.width = CONFIG.w; this.canvas.height = CONFIG.h;
+            for (let i = 0; i < 45; i++) {
+                this.embers.push({
+                    x: Math.random() * CONFIG.w, y: Math.random() * CONFIG.h,
+                    size: Math.random() * 2.5 + 0.8, vx: (Math.random() - 0.5) * 0.5,
+                    vy: -(Math.random() * 0.6 + 0.2), alpha: Math.random() * 0.7 + 0.15,
+                    hue: Math.random() < 0.5 ? 45 : 30
+                });
+            }
+            this.loop();
+        }
+        spawn(x, y, color, text = null) {
+            if (text) {
+                this.particles.push({ x, y, vx: (Math.random() - 0.5) * 2, vy: -3, color, text, life: 1.0, decay: 0.018 });
+            } else {
+                for (let i = 0; i < 24; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 8 + 2;
+                    this.particles.push({
+                        x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                        color, text: null, size: Math.random() * 4 + 1.5, life: 1.0, decay: Math.random() * 0.035 + 0.018
+                    });
+                }
+            }
+        }
+        loop() {
+            this.ctx.clearRect(0, 0, CONFIG.w, CONFIG.h);
+            for (let e of this.embers) {
+                e.x += e.vx; e.y += e.vy;
+                if (e.y < 0) { e.y = CONFIG.h; e.x = Math.random() * CONFIG.w; }
+                this.ctx.globalAlpha = e.alpha;
+                this.ctx.fillStyle = `hsl(${e.hue}, 80%, 65%)`;
+                this.ctx.shadowColor = `hsl(${e.hue}, 90%, 60%)`;
+                this.ctx.shadowBlur = 8;
+                this.ctx.beginPath(); this.ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2); this.ctx.fill();
+                this.ctx.shadowBlur = 0;
+            }
+            for (let i = this.particles.length - 1; i >= 0; i--) {
+                const p = this.particles[i];
+                p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+                if (p.life <= 0) { this.particles.splice(i, 1); continue; }
+                this.ctx.globalAlpha = p.life;
+                if (p.text) {
+                    this.ctx.font = '900 30px Cinzel Decorative, Cinzel';
+                    this.ctx.fillStyle = p.color; this.ctx.shadowColor = '#000'; this.ctx.shadowBlur = 10;
+                    this.ctx.fillText(p.text, p.x, p.y); this.ctx.shadowBlur = 0;
+                } else {
+                    p.vy += 0.18;
+                    this.ctx.beginPath(); this.ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+                    this.ctx.fillStyle = p.color; this.ctx.shadowColor = p.color; this.ctx.shadowBlur = 12;
+                    this.ctx.fill(); this.ctx.shadowBlur = 0;
+                }
+            }
+            this.ctx.globalAlpha = 1.0;
+            requestAnimationFrame(() => this.loop());
+        }
+    }
+
+    class MapGenerator {
+        static generate() {
+            const floors = [];
+            const nodeTypes = ['monster', 'monster', 'shop', 'rest', 'elite'];
+            for (let f = 0; f < CONFIG.mapFloors; f++) {
+                const floorNodes = [];
+                let count = (f === 0 || f === CONFIG.mapFloors - 1) ? 1 : (Math.random() < 0.5 ? 3 : 2);
+                for (let i = 0; i < count; i++) {
+                    let type = 'monster';
+                    if (f === 0) type = 'monster';
+                    else if (f === CONFIG.mapFloors - 1) type = 'boss';
+                    else if (f === 3) type = 'rest';
+                    else type = nodeTypes[Math.floor(Math.random() * nodeTypes.length)];
+                    floorNodes.push({ id: `node_${f}__${i}`, floor: f, idx: i, type, visited: false, connections: [] });
+                }
+                floors.push(floorNodes);
+            }
+            for (let f = 0; f < CONFIG.mapFloors - 1; f++) {
+                const currentNodes = floors[f];
+                const nextNodes = floors[f + 1];
+                currentNodes.forEach((node, i) => {
+                    if (nextNodes.length === 1) node.connections.push(nextNodes[0].id);
+                    else if (currentNodes.length === 1) nextNodes.forEach(nn => node.connections.push(nn.id));
+                    else {
+                        const targetIdx = Math.min(i, nextNodes.length - 1);
+                        node.connections.push(nextNodes[targetIdx].id);
+                        if (Math.random() < 0.5 && targetIdx + 1 < nextNodes.length) node.connections.push(nextNodes[targetIdx + 1].id);
+                    }
+                });
+            }
+            return floors;
+        }
+    }
+
+    // ================= GAME ENGINE =================
+    class GameEngine {
+        constructor() {
+            this.player = null; this.map = []; this.currentFloor = 0;
+            this.currentNode = null; this.combat = null; this.particles = null;
+            this.currentScale = 1;
+            this._shakeTimeout = null;
+            this.setupViewportScaling();
+            this.setupTooltipListeners();
+        }
+
+        setupViewportScaling() {
+            const resize = () => {
+                const gameView = document.getElementById('game-view');
+                this.currentScale = Math.min(window.innerWidth / CONFIG.w, window.innerHeight / CONFIG.h);
+                gameView.style.transform = `scale(${this.currentScale})`;
+                document.documentElement.style.setProperty('--view-scale', this.currentScale);
+            };
+            window.addEventListener('resize', resize);
+            window.addEventListener('load', resize);
+            resize();
+        }
+
+        setupTooltipListeners() {
+            window.addEventListener('mousemove', (e) => {
+                const tt = document.getElementById('tooltip');
+                if (tt.style.display === 'block') this.updateTooltipPosition(e);
+            });
+        }
+
+        updateTooltipPosition(e) {
+            const tt = document.getElementById('tooltip');
+            const gameView = document.getElementById('game-view');
+            const rect = gameView.getBoundingClientRect();
+            const scale = this.currentScale || 1;
+            const localX = (e.clientX - rect.left) / scale;
+            const localY = (e.clientY - rect.top) / scale;
+            const ttWidth = tt.offsetWidth || 260;
+            const ttHeight = tt.offsetHeight || 80;
+            let x = localX + 15;
+            let y = localY + 15;
+            if (x + ttWidth > CONFIG.w) x = CONFIG.w - ttWidth - 8;
+            if (y + ttHeight > CONFIG.h) y = CONFIG.h - ttHeight - 8;
+            if (x < 8) x = 8;
+            if (y < 8) y = 8;
+            tt.style.left = `${x}px`;
+            tt.style.top = `${y}px`;
+        }
+
+        showTooltip(title, desc, e) {
+            const tt = document.getElementById('tooltip');
+            document.getElementById('tt-title').innerText = title;
+            document.getElementById('tt-desc').innerText = desc;
+            tt.style.display = 'block';
+            this.updateTooltipPosition(e);
+        }
+
+        hideTooltip() { document.getElementById('tooltip').style.display = 'none'; }
+
+        showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        triggerScreenShake() {
+            const gv = document.getElementById('game-view');
+            gv.classList.remove('shake');
+            if (this._shakeTimeout) clearTimeout(this._shakeTimeout);
+            void gv.offsetWidth;
+            gv.classList.add('shake');
+            this._shakeTimeout = setTimeout(() => gv.classList.remove('shake'), 400);
+        }
+
+        flashScreen(color, intensity = 0.5) {
+            const flash = document.getElementById('screen-flash');
+            flash.style.transition = 'none';
+            flash.style.background = color;
+            flash.style.opacity = intensity;
+            void flash.offsetWidth;
+            flash.style.transition = 'opacity 0.35s ease-out';
+            flash.style.opacity = 0;
+        }
+
+        createCardElement(card) {
+            const el = document.createElement('div');
+            el.className = `card type-${card.type}`;
+            el.innerHTML = `
+                <div class="card-cost">${card.cost}</div>
+                <div class="card-title">${card.name}</div>
+                <div class="card-art-window">
+                    <div class="card-icon">${card.icon}</div>
+                </div>
+                <div class="card-desc">${card.desc()}</div>
+                <div class="card-type-label">${card.type}</div>
+            `;
+            return el;
+        }
+
+        selectClass(cls) {
+            audio.play('click');
+            let hp = 80, name = 'Knight', startRelic = 'shield_faith';
+            let starterCards = [
+                this.createCard('strike'), this.createCard('strike'), this.createCard('strike'), this.createCard('strike'),
+                this.createCard('defend'), this.createCard('defend'), this.createCard('defend'), this.createCard('defend'),
+                this.createCard('bash')
+            ];
+            if (cls === 'prophet') { hp = 70; name = 'Prophet'; startRelic = 'mantle_elijah'; starterCards.push(this.createCard('cleave')); }
+            else if (cls === 'psalmist') { hp = 75; name = 'Psalmist'; startRelic = 'harp_david'; starterCards.push(this.createCard('blessing')); }
+
+            this.player = { class: cls, name, hp, maxHp: hp, gold: 99, deck: starterCards, relics: [RELICS_DB[startRelic]] };
+            this.map = MapGenerator.generate();
+            this.currentFloor = 0; this.currentNode = null;
+
+            if (!this.particles) this.particles = new ParticleEngine();
+            this.updateHUD();
+            this.showView('map-view');
+            this.renderMap();
+            audio.playTheme('map');
+        }
+
+        restartGame() {
+            document.getElementById('defeat-modal').classList.remove('active');
+            document.getElementById('victory-modal').classList.remove('active');
+            this.showView('title-view');
+            audio.playTheme('title');
+        }
+
+        createCard(key, upgraded = false) {
+            const base = CARDS_DB[key];
+            return {
+                id: key + '_' + Math.random().toString(36).substr(2, 5),
+                key, name: base.name + (upgraded ? '+' : ''), type: base.type,
+                cost: upgraded && base.cost > 0 ? Math.max(0, base.cost - 1) : base.cost,
+                val: upgraded ? base.val + 3 : base.val,
+                val2: base.val2 ? (upgraded ? base.val2 + 1 : base.val2) : null,
+                icon: base.icon, upgraded,
+                desc: function() { return base.desc(this); }
+            };
+        }
+
+        updateHUD() {
+            if (!this.player) return;
+            document.getElementById('hud-class').innerText = this.player.name;
+            document.getElementById('hud-hp').innerText = `${this.player.hp} / ${this.player.maxHp}`;
+            document.getElementById('hud-gold').innerText = this.player.gold;
+            document.getElementById('hud-floor').innerText = this.currentFloor + 1;
+            document.getElementById('hud-deck-size').innerText = this.player.deck.length;
+            const relicsBar = document.getElementById('hud-relics');
+            relicsBar.innerHTML = '';
+            this.player.relics.forEach(r => {
+                const el = document.createElement('div');
+                el.className = 'relic-icon';
+                el.innerText = r.icon;
+                el.onmouseenter = (e) => this.showTooltip(r.name, r.desc, e);
+                el.onmouseleave = () => this.hideTooltip();
+                relicsBar.appendChild(el);
+            });
+        }
+
+        renderMap() {
+            const mapTree = document.getElementById('map-tree');
+            const svg = document.getElementById('map-svg');
+            mapTree.innerHTML = ''; svg.innerHTML = '';
+            const nodeIcon = { monster: '⚔️', elite: '👹', shop: '💰', rest: '🔥', boss: '💀' };
+
+            this.map.forEach((floorNodes) => {
+                floorNodes.forEach((node) => {
+                    const count = floorNodes.length;
+                    node.x = 500 + (node.idx - (count - 1) / 2) * 170;
+                    node.y = 470 - (node.floor * 70);
+                });
+            });
+
+            this.map.forEach((floorNodes) => {
+                floorNodes.forEach((node) => {
+                    node.connections.forEach((targetId) => {
+                        const targetNode = this.findNodeById(targetId);
+                        if (targetNode) {
+                            const d = `M ${node.x} ${node.y} C ${node.x} ${(node.y + targetNode.y)/2}, ${targetNode.x} ${(node.y + targetNode.y)/2}, ${targetNode.x} ${targetNode.y}`;
+                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            line.setAttribute('d', d);
+                            line.setAttribute('stroke', '#dfb743');
+                            line.setAttribute('stroke-opacity', '0.35');
+                            line.setAttribute('stroke-width', '3');
+                            line.setAttribute('fill', 'none');
+                            line.setAttribute('stroke-linecap', 'round');
+                            svg.appendChild(line);
+                            const glow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            glow.setAttribute('d', d);
+                            glow.setAttribute('stroke', '#fff2ad');
+                            glow.setAttribute('stroke-opacity', '0.15');
+                            glow.setAttribute('stroke-width', '8');
+                            glow.setAttribute('fill', 'none');
+                            glow.setAttribute('stroke-linecap', 'round');
+                            svg.appendChild(glow);
+                        }
+                    });
+                });
+            });
+
+            this.map.forEach((floorNodes, f) => {
+                floorNodes.forEach((node) => {
+                    const el = document.createElement('div');
+                    el.className = 'map-node';
+                    el.id = node.id;
+                    el.style.left = `${node.x}px`;
+                    el.style.top = `${node.y}px`;
+                    el.innerText = nodeIcon[node.type];
+
+                    let isAvailable = false;
+                    if (this.currentFloor === 0 && f === 0) isAvailable = true;
+                    else if (this.currentNode && this.currentNode.connections.includes(node.id)) isAvailable = true;
+
+                    if (this.currentNode && this.currentNode.id === node.id) el.classList.add('current');
+                    else if (node.visited) el.classList.add('visited');
+                    else if (isAvailable) {
+                        el.classList.add('available');
+                        el.onclick = () => this.visitNode(node);
+                    }
+
+                    mapTree.appendChild(el);
+                });
+            });
+        }
+
+        findNodeById(id) {
+            for (let f of this.map) for (let n of f) if (n.id === id) return n;
+            return null;
+        }
+
+        visitNode(node) {
+            audio.play('click');
+            this.currentNode = node;
+            node.visited = true;
+            if (node.type === 'monster' || node.type === 'elite' || node.type === 'boss') this.startCombat(node.type);
+            else if (node.type === 'shop') this.openShop();
+            else if (node.type === 'rest') this.openRest();
+        }
+
+        leaveNode() {
+            this.currentFloor++;
+            this.updateHUD();
+            this.showView('map-view');
+            this.renderMap();
+            audio.playTheme('map');
+        }
+
+        startCombat(type) {
+            this.showView('combat-view');
+            document.getElementById('player-name').innerText = this.player.name;
+            this.combat = new CombatEngine(type);
+            this.combat.init();
+            if (type === 'boss') audio.playTheme('battle_boss');
+            else if (type === 'elite') audio.playTheme('battle_elite');
+            else audio.playTheme('battle_normal');
+        }
+
+        openShop() {
+            this.showView('shop-view');
+            audio.playTheme('shop');
+            const cardsBox = document.getElementById('shop-cards');
+            const relicsBox = document.getElementById('shop-relics');
+            cardsBox.innerHTML = ''; relicsBox.innerHTML = '';
+            document.getElementById('shop-purge-btn').disabled = false;
+
+            // --- Cards for Sale (full size, legible) ---
+            const availableKeys = Object.keys(CARDS_DB);
+            for (let i = 0; i < 3; i++) {
+                const k = availableKeys[Math.floor(Math.random() * availableKeys.length)];
+                const card = this.createCard(k);
+                const price = 50 + Math.floor(Math.random() * 25);
+
+                const itemEl = document.createElement('div');
+                itemEl.className = 'shop-card-item';
+
+                const cardEl = this.createCardElement(card);
+                itemEl.appendChild(cardEl);
+
+                const footerEl = document.createElement('div');
+                footerEl.className = 'shop-card-footer';
+
+                const priceEl = document.createElement('div');
+                priceEl.className = 'shop-item-price';
+                priceEl.innerHTML = `🪙 ${price}`;
+                footerEl.appendChild(priceEl);
+
+                const buyBtn = document.createElement('button');
+                buyBtn.className = 'btn shop-buy-btn';
+                buyBtn.innerText = 'Buy';
+                buyBtn.onclick = () => {
+                    if (this.player.gold >= price) {
+                        this.player.gold -= price;
+                        this.player.deck.push(card);
+                        audio.play('gold');
+                        itemEl.style.opacity = '0.3';
+                        buyBtn.disabled = true;
+                        this.updateHUD();
+                    }
+                };
+                footerEl.appendChild(buyBtn);
+
+                itemEl.appendChild(footerEl);
+                cardsBox.appendChild(itemEl);
+            }
+
+            // --- Relics for Sale (compact horizontal layout) ---
+            const relKeys = Object.keys(RELICS_DB).filter(rk => !this.player.relics.some(pr => pr.id === rk));
+            if (relKeys.length === 0) {
+                relicsBox.innerHTML = `<div class="shop-purge-desc" style="text-align:center; padding: 20px;">All relics already acquired.</div>`;
+            } else {
+                for (let i = 0; i < Math.min(2, relKeys.length); i++) {
+                    const relic = RELICS_DB[relKeys[i]];
+                    const price = 120;
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'shop-relic-item';
+                    itemEl.innerHTML = `
+                        <div class="shop-relic-icon">${relic.icon}</div>
+                        <div class="shop-relic-info">
+                            <div class="shop-relic-name">${relic.name}</div>
+                            <div class="shop-relic-desc">${relic.desc}</div>
+                        </div>
+                        <div class="shop-relic-actions">
+                            <div class="shop-item-price">🪙 ${price}</div>
+                            <button class="btn shop-buy-btn">Buy</button>
+                        </div>
+                    `;
+                    const buyBtn = itemEl.querySelector('button');
+                    buyBtn.onclick = () => {
+                        if (this.player.gold >= price) {
+                            this.player.gold -= price;
+                            this.player.relics.push(relic);
+                            if (relic.id === 'holy_grail') { this.player.maxHp += 12; this.player.hp += 12; }
+                            audio.play('gold');
+                            itemEl.style.opacity = '0.35';
+                            buyBtn.disabled = true;
+                            this.updateHUD();
+                        }
+                    };
+                    relicsBox.appendChild(itemEl);
+                }
+            }
+        }
+
+        shopPurgeCard() {
+            if (this.player.gold >= 75) {
+                this.openDeckModal('purge', (cardIndex) => {
+                    this.player.gold -= 75;
+                    this.player.deck.splice(cardIndex, 1);
+                    audio.play('gold');
+                    this.updateHUD();
+                    document.getElementById('shop-purge-btn').disabled = true;
+                    this.closeDeckModal();
+                });
+            }
+        }
+
+        openRest() {
+            this.showView('rest-view');
+            audio.playTheme('rest');
+            document.getElementById('rest-heal-amt').innerText = Math.floor(this.player.maxHp * 0.3);
+        }
+
+        restHeal() {
+            const healAmt = Math.floor(this.player.maxHp * 0.3);
+            this.player.hp = Math.min(this.player.maxHp, this.player.hp + healAmt);
+            audio.play('power');
+            this.updateHUD();
+            this.leaveNode();
+        }
+
+        openForgeModal() {
+            this.openDeckModal('forge', (cardIndex) => {
+                const c = this.player.deck[cardIndex];
+                if (!c.upgraded) {
+                    this.player.deck[cardIndex] = this.createCard(c.key, true);
+                    audio.play('slash');
+                    this.updateHUD();
+                    this.closeDeckModal();
+                    this.leaveNode();
+                }
+            });
+        }
+
+        openDeckModal(mode = 'view', callback = null) {
+            audio.play('click');
+            const modal = document.getElementById('deck-modal');
+            const grid = document.getElementById('deck-modal-grid');
+            grid.innerHTML = '';
+            let title = 'YOUR DECK';
+            if (mode === 'draw') title = 'DRAW PILE';
+            else if (mode === 'discard') title = 'DISCARD PILE';
+            else if (mode === 'forge') title = 'CHOOSE CARD TO FORGE (+)';
+            else if (mode === 'purge') title = 'CHOOSE CARD TO PURGE';
+            document.getElementById('deck-modal-title').innerText = title;
+
+            let cardList = this.player.deck;
+            if (mode === 'draw') cardList = this.combat ? this.combat.drawPile : [];
+            else if (mode === 'discard') cardList = this.combat ? this.combat.discardPile : [];
+
+            cardList.forEach((card, idx) => {
+                const cardEl = this.createCardElement(card);
+                if (callback) {
+                    cardEl.style.cursor = 'pointer';
+                    cardEl.onclick = () => callback(idx);
+                }
+                grid.appendChild(cardEl);
+            });
+            modal.classList.add('active');
+        }
+
+        closeDeckModal() {
+            audio.play('click');
+            document.getElementById('deck-modal').classList.remove('active');
+        }
+
+        showRewardModal(goldEarned) {
+            audio.play('victory');
+            this.flashScreen('rgba(255,242,173,0.3)', 0.4);
+            let bonus = 0;
+            if (this.player.relics.some(r => r.id === 'golden_censer')) bonus = 15;
+            this.player.gold += goldEarned + bonus;
+            this.updateHUD();
+
+            const modal = document.getElementById('reward-modal');
+            document.getElementById('reward-gold-text').innerText = bonus > 0
+                ? `Gained +${goldEarned} Gold (+${bonus} bonus from Golden Censer!)`
+                : `Gained +${goldEarned} Gold!`;
+            const container = document.getElementById('reward-cards');
+            container.innerHTML = '';
+            const keys = Object.keys(CARDS_DB);
+            for (let i = 0; i < 3; i++) {
+                const k = keys[Math.floor(Math.random() * keys.length)];
+                const card = this.createCard(k);
+                const cardEl = this.createCardElement(card);
+                cardEl.style.transform = 'scale(1.05)';
+                cardEl.onclick = () => {
+                    this.player.deck.push(card);
+                    audio.play('gold');
+                    this.closeRewardModal();
+                };
+                container.appendChild(cardEl);
+            }
+            modal.classList.add('active');
+        }
+
+        closeRewardModal() {
+            audio.play('click');
+            document.getElementById('reward-modal').classList.remove('active');
+            if (this.currentNode && this.currentNode.type === 'boss') {
+                document.getElementById('victory-modal').classList.add('active');
+            } else {
+                this.leaveNode();
+            }
+        }
+
+        triggerDefeat() { document.getElementById('defeat-modal').classList.add('active'); }
+    }
+
+    // ================= COMBAT ENGINE =================
+    class CombatEngine {
+        constructor(nodeType) {
+            this.nodeType = nodeType;
+            this.energy = CONFIG.maxEnergy;
+            this.maxEnergy = CONFIG.maxEnergy;
+            this.drawPile = []; this.hand = []; this.discardPile = [];
+            this.enemies = [];
+            this.playerBlock = 0;
+            this.playerStrength = 0;
+            this.turnIronFaith = 0;
+            this.draggingCard = null;
+            this.turnCount = 0;
+            this.hasShieldFaith = false;
+            this.hasHarp = false;
+        }
+
+        init() {
+            if (game.player.relics.some(r => r.id === 'harp_david')) this.hasHarp = true;
+            if (game.player.relics.some(r => r.id === 'mantle_elijah')) this.playerStrength += 2;
+            if (game.player.relics.some(r => r.id === 'shield_faith')) this.hasShieldFaith = true;
+
+            this.energy = this.maxEnergy;
+            this.drawPile = [...game.player.deck].sort(() => Math.random() - 0.5);
+            this.spawnEnemies();
+            this.startTurn();
+            this.setupTargetingCanvas();
+        }
+
+        spawnEnemies() {
+            const area = document.getElementById('enemies-area');
+            area.innerHTML = '';
+            this.enemies = [];
+            let configs = [{ name: 'Shadow Imp', hp: 24, icon: '👾' }, { name: 'Cultist', hp: 32, icon: '🧙' }];
+            if (this.nodeType === 'elite') configs = [{ name: 'Demon Elite', hp: 68, icon: '👹' }];
+            else if (this.nodeType === 'boss') configs = [{ name: 'Arch-Fiend', hp: 130, icon: '💀' }];
+            configs.forEach((cfg, idx) => {
+                const enemy = new CombatEnemy(idx, cfg.name, cfg.hp, cfg.icon);
+                this.enemies.push(enemy);
+                area.appendChild(enemy.render());
+            });
+        }
+
+        startTurn() {
+            this.turnCount++;
+            this.playerBlock = this.turnIronFaith;
+
+            if (this.turnCount === 1) {
+                if (this.hasShieldFaith) this.playerBlock += 4;
+                this.energy = this.maxEnergy + (this.hasHarp ? 1 : 0);
+            } else {
+                this.energy = this.maxEnergy;
+            }
+
+            for (let i = 0; i < CONFIG.handSize; i++) this.drawCard();
+
+            this.enemies.forEach(e => {
+                if (e.hp > 0) {
+                    if (e.vulnerable > 0) e.vulnerable--;
+                    e.rollIntent();
+                }
+            });
+            this.updateUI();
+        }
+
+        drawCard() {
+            if (this.drawPile.length === 0) {
+                if (this.discardPile.length === 0) return;
+                this.drawPile = [...this.discardPile].sort(() => Math.random() - 0.5);
+                this.discardPile = [];
+            }
+            if (this.drawPile.length > 0) this.hand.push(this.drawPile.pop());
+        }
+
+        playCard(cardIndex, targetEnemy = null) {
+            const card = this.hand[cardIndex];
+            if (this.energy < card.cost) return;
+            this.energy -= card.cost;
+
+            if (card.type === 'attack') {
+                audio.play('slash');
+                game.triggerScreenShake();
+                game.flashScreen('rgba(239,68,68,0.25)', 0.35);
+                const playerEnt = document.getElementById('player-entity');
+                playerEnt.classList.add('attacking-right');
+                setTimeout(() => playerEnt.classList.remove('attacking-right'), 350);
+
+                const dmg = card.key === 'shield_slam' ? this.playerBlock : (card.val + this.playerStrength);
+                if (card.key === 'holy_fire' || card.key === 'cleave') {
+                    this.enemies.forEach(e => {
+                        if (e.hp > 0) {
+                            e.takeDamage(dmg);
+                            if (card.val2) e.vulnerable += card.val2;
+                        }
+                    });
+                } else if (targetEnemy) {
+                    targetEnemy.takeDamage(dmg);
+                    if (card.val2) targetEnemy.vulnerable += card.val2;
+                } else {
+                    const firstAlive = this.enemies.find(e => e.hp > 0);
+                    if (firstAlive) {
+                        firstAlive.takeDamage(dmg);
+                        if (card.val2) firstAlive.vulnerable += card.val2;
+                    }
+                }
+            } else if (card.type === 'skill') {
+                audio.play('block');
+                game.flashScreen('rgba(59,130,246,0.2)', 0.3);
+                if (card.key === 'prayer') {
+                    for (let i = 0; i < card.val; i++) this.drawCard();
+                } else if (card.key === 'blessing') {
+                    this.playerBlock += card.val;
+                    this.drawCard();
+                } else if (card.key === 'hymn') {
+                    this.playerBlock += card.val;
+                    this.drawCard(); this.drawCard();
+                } else {
+                    this.playerBlock += card.val;
+                }
+                game.particles.spawn(200, 320, '#3b82f6');
+            } else if (card.type === 'power') {
+                audio.play('power');
+                game.flashScreen('rgba(245,158,11,0.25)', 0.35);
+                if (card.key === 'power_zeal') this.playerStrength += card.val;
+                if (card.key === 'power_iron') this.turnIronFaith += card.val;
+                game.particles.spawn(200, 320, '#f59e0b');
+            }
+
+            this.discardPile.push(this.hand.splice(cardIndex, 1)[0]);
+            this.updateUI();
+
+            if (this.enemies.every(e => e.hp <= 0)) {
+                setTimeout(() => {
+                    game.showRewardModal(this.nodeType === 'boss' ? 80 : 30);
+                }, 600);
+            }
+        }
+
+        endTurn() {
+            audio.play('click');
+            while (this.hand.length > 0) this.discardPile.push(this.hand.pop());
+            this.enemies.forEach(e => { if (e.hp > 0) e.executeTurn(); });
+            if (game.player.hp <= 0) game.triggerDefeat();
+            else this.startTurn();
+        }
+
+        updateUI() {
+            document.getElementById('energy-val').innerText = `${this.energy}/${this.maxEnergy}`;
+            document.getElementById('draw-count').innerText = this.drawPile.length;
+            document.getElementById('discard-count').innerText = this.discardPile.length;
+            document.getElementById('player-hp-bar').style.width = `${(game.player.hp / game.player.maxHp) * 100}%`;
+            document.getElementById('player-hp-text').innerText = `${game.player.hp}/${game.player.maxHp}`;
+            document.getElementById('hud-hp').innerText = `${game.player.hp} / ${game.player.maxHp}`;
+
+            const buffsEl = document.getElementById('player-buffs');
+            buffsEl.innerHTML = '';
+            if (this.playerBlock > 0) buffsEl.innerHTML += `<div class="buff-badge" style="color:#60a5fa;">🛡️ ${this.playerBlock}</div>`;
+            if (this.playerStrength > 0) buffsEl.innerHTML += `<div class="buff-badge" style="color:#f87171;">⚔️ +${this.playerStrength}</div>`;
+
+            this.renderHand();
+            this.enemies.forEach(e => e.updateUI());
+        }
+
+        renderHand() {
+            const container = document.getElementById('hand-container');
+            container.innerHTML = '';
+            this.hand.forEach((card, idx) => {
+                const cardEl = game.createCardElement(card);
+                if (this.energy < card.cost) cardEl.classList.add('unplayable');
+                cardEl.onmousedown = (e) => this.startCardDrag(idx, cardEl, e);
+                cardEl.ontouchstart = (e) => this.startCardDrag(idx, cardEl, e.touches[0]);
+                container.appendChild(cardEl);
+            });
+        }
+
+        setupTargetingCanvas() {
+            const canvas = document.getElementById('targeting-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = CONFIG.w; canvas.height = CONFIG.h;
+
+            const getClientX = (e) => {
+                if (e.clientX !== undefined) return e.clientX;
+                if (e.touches && e.touches[0]) return e.touches[0].clientX;
+                if (e.changedTouches && e.changedTouches[0]) return e.changedTouches[0].clientX;
+                return 0;
+            };
+            const getClientY = (e) => {
+                if (e.clientY !== undefined) return e.clientY;
+                if (e.touches && e.touches[0]) return e.touches[0].clientY;
+                if (e.changedTouches && e.changedTouches[0]) return e.changedTouches[0].clientY;
+                return 0;
+            };
+
+            const drawVector = (start, end) => {
+                ctx.clearRect(0, 0, CONFIG.w, CONFIG.h);
+                if (!start || !end) return;
+                const scale = game.currentScale || 1;
+                const rect = document.getElementById('game-view').getBoundingClientRect();
+                const sX = (start.x - rect.left) / scale;
+                const sY = (start.y - rect.top) / scale;
+                const eX = (end.x - rect.left) / scale;
+                const eY = (end.y - rect.top) / scale;
+                ctx.beginPath();
+                ctx.moveTo(sX, sY);
+                ctx.quadraticCurveTo(sX, eY, eX, eY);
+                ctx.strokeStyle = 'rgba(255,242,173,0.35)';
+                ctx.lineWidth = 12;
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(sX, sY);
+                ctx.quadraticCurveTo(sX, eY, eX, eY);
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 4;
+                ctx.setLineDash([12, 8]);
+                ctx.lineDashOffset = -performance.now() / 40;
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.beginPath();
+                ctx.arc(eX, eY, 14, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(239,68,68,0.3)';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(eX, eY, 8, 0, Math.PI * 2);
+                ctx.fillStyle = '#f87171';
+                ctx.fill();
+            };
+
+            const handleMove = (e) => {
+                if (this.draggingCard) drawVector(this.draggingCard.origin, { x: getClientX(e), y: getClientY(e) });
+            };
+
+            const handleUp = (e) => {
+                if (this.draggingCard) {
+                    ctx.clearRect(0, 0, CONFIG.w, CONFIG.h);
+                    const clientX = getClientX(e), clientY = getClientY(e);
+                    const targetEnemy = this.enemies.find(en => en.isPointerOver(clientX, clientY));
+                    if (this.draggingCard.card.type === 'attack' && targetEnemy) {
+                        this.playCard(this.draggingCard.idx, targetEnemy);
+                    } else if (this.draggingCard.card.type !== 'attack') {
+                        this.playCard(this.draggingCard.idx);
+                    }
+                    this.draggingCard = null;
+                }
+            };
+
+            window.onmousemove = handleMove;
+            window.ontouchmove = handleMove;
+            window.onmouseup = handleUp;
+            window.ontouchend = handleUp;
+        }
+
+        startCardDrag(idx, cardEl, e) {
+            audio.play('click');
+            const rect = cardEl.getBoundingClientRect();
+            this.draggingCard = {
+                idx,
+                card: this.hand[idx],
+                origin: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+            };
+        }
+    }
+
+    // ================= COMBAT ENEMY =================
+    class CombatEnemy {
+        constructor(idx, name, maxHp, icon) {
+            this.idx = idx; this.name = name; this.maxHp = maxHp; this.hp = maxHp;
+            this.icon = icon; this.block = 0; this.vulnerable = 0;
+            this.intent = { type: 'attack', val: 6 }; this.el = null;
+        }
+
+        render() {
+            this.el = document.createElement('div');
+            this.el.className = 'combat-entity';
+            this.el.innerHTML = `
+                <div class="entity-intent" id="intent-${this.idx}">⚔️ 6</div>
+                <div class="entity-portrait">${this.icon}</div>
+                <div class="entity-status-bar">
+                    <div class="entity-name">${this.name}</div>
+                    <div class="bar-container">
+                        <div class="bar-fill" id="enemy-hp-bar-${this.idx}"></div>
+                        <div class="bar-text" id="enemy-hp-text-${this.idx}">${this.hp}/${this.maxHp}</div>
+                    </div>
+                    <div class="buffs-list" id="enemy-buffs-${this.idx}"></div>
+                </div>
+            `;
+            return this.el;
+        }
+
+        rollIntent() {
+            this.block = 0;
+            const roll = Math.random();
+            if (roll < 0.6) this.intent = { type: 'attack', val: Math.floor(Math.random() * 4) + 6 };
+            else if (roll < 0.85) this.intent = { type: 'defend', val: Math.floor(Math.random() * 4) + 5 };
+            else this.intent = { type: 'buff', val: 2 };
+        }
+
+        executeTurn() {
+            if (this.intent.type === 'attack') {
+                let dmg = this.intent.val;
+                if (game.combat.playerBlock > 0) {
+                    const blockUsed = Math.min(game.combat.playerBlock, dmg);
+                    game.combat.playerBlock -= blockUsed;
+                    dmg -= blockUsed;
+                }
+                this.el.classList.add('attacking-left');
+                setTimeout(() => this.el.classList.remove('attacking-left'), 350);
+                setTimeout(() => {
+                    if (dmg > 0) {
+                        game.player.hp = Math.max(0, game.player.hp - dmg);
+                        audio.play('hurt');
+                        game.triggerScreenShake();
+                        game.flashScreen('rgba(239,68,68,0.45)', 0.55);
+                        const playerEnt = document.getElementById('player-entity');
+                        playerEnt.classList.add('hit-flash');
+                        setTimeout(() => playerEnt.classList.remove('hit-flash'), 300);
+                        if (game.player.relics.some(r => r.id === 'crown_thorns')) this.takeDamage(3);
+                    }
+                }, 150);
+            } else if (this.intent.type === 'defend') {
+                this.block += this.intent.val;
+                audio.play('block');
+            } else if (this.intent.type === 'buff') {
+                this.intent.val += 1;
+                audio.play('power');
+            }
+        }
+
+        takeDamage(amt) {
+            if (this.vulnerable > 0) amt = Math.floor(amt * 1.5);
+            if (this.block > 0) {
+                const usedBlock = Math.min(this.block, amt);
+                this.block -= usedBlock;
+                amt -= usedBlock;
+            }
+            if (amt > 0) {
+                this.hp = Math.max(0, this.hp - amt);
+                const rect = this.el.getBoundingClientRect();
+                const scale = game.currentScale || 1;
+                const viewRect = document.getElementById('game-view').getBoundingClientRect();
+                const x = (rect.left - viewRect.left + rect.width / 2) / scale;
+                const y = (rect.top - viewRect.top + 40) / scale;
+                game.particles.spawn(x, y, '#ef4444', `-${amt}`);
+                this.el.classList.add('hit-flash');
+                setTimeout(() => this.el.classList.remove('hit-flash'), 300);
+            }
+            if (this.hp <= 0) {
+                this.el.classList.add('dying');
+                setTimeout(() => {
+                    if (this.el) { this.el.style.opacity = '0'; this.el.style.filter = 'grayscale(1)'; }
+                }, 400);
+            }
+        }
+
+        isPointerOver(clientX, clientY) {
+            if (!this.el || this.hp <= 0) return false;
+            const rect = this.el.getBoundingClientRect();
+            return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+        }
+
+        updateUI() {
+            if (!this.el) return;
+            const hpBar = document.getElementById(`enemy-hp-bar-${this.idx}`);
+            const hpText = document.getElementById(`enemy-hp-text-${this.idx}`);
+            const intentEl = document.getElementById(`intent-${this.idx}`);
+            const buffsEl = document.getElementById(`enemy-buffs-${this.idx}`);
+            if (hpBar) hpBar.style.width = `${(this.hp / this.maxHp) * 100}%`;
+            if (hpText) hpText.innerText = `${this.hp}/${this.maxHp}`;
+            if (intentEl) {
+                if (this.intent.type === 'attack') intentEl.innerText = `⚔️ ${this.intent.val}`;
+                else if (this.intent.type === 'defend') intentEl.innerText = `🛡️ ${this.intent.val}`;
+                else intentEl.innerText = `✨ Buff`;
+            }
+            if (buffsEl) {
+                buffsEl.innerHTML = '';
+                if (this.block > 0) buffsEl.innerHTML += `<div class="buff-badge" style="color:#60a5fa;">🛡️ ${this.block}</div>`;
+                if (this.vulnerable > 0) buffsEl.innerHTML += `<div class="buff-badge" style="color:#f87171;">💔 ${this.vulnerable}</div>`;
+            }
+        }
+    }
+
+    const game = new GameEngine();
+    audio.playTheme('title');
+</script>
+</body>
+</html>

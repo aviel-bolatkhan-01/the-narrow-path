@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Narrow Path - Slay the Spire Style</title>
+    <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --board-parchment: #dcc8a0;
+            --gold-foil: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+            --gold-border: #aa771c;
+            --ink: #1a1a1a;
+            --faith-blue: #4a90e2;
+            --hp-red: #c0392b;
+            --block-gold: #f1c40f;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Cinzel', 'Georgia', serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #game-world {
+            position: relative;
+            width: 1200px;
+            height: 800px;
+            background: radial-gradient(circle, #2c2c2c 0%, #000 100%);
+            border: 10px solid #222;
+            box-shadow: 0 0 100px rgba(0,0,0,1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Board Layer */
+        #board {
+            position: absolute;
+            width: 900px;
+            height: 400px;
+            left: 150px;
+            top: 100px;
+            background-color: var(--board-parchment);
+            background-image: url('https://www.transparenttextures.com/patterns/beige-paper.png');
+            border: 15px solid #3d2b1f;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.4);
+            border-radius: 5px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Entities */
+        .entity {
+            position: absolute;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.1s;
+        }
+
+        #player { bottom: 250px; left: 200px; }
+        #enemy { top: 200px; right: 200px; }
+
+        .sprite {
+            width: 120px;
+            height: 120px;
+            font-size: 5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+        }
+
+        /* HP & Block Bars */
+        .stat-container {
+            width: 160px;
+            margin-top: 10px;
+            position: relative;
+        }
+
+        .bar-bg {
+            width: 100%;
+            height: 18px;
+            background: #333;
+            border: 2px solid #000;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hp-fill {
+            height: 100%;
+            background: var(--hp-red);
+            transition: width 0.4s ease-out;
+        }
+
+        .block-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: var(--block-gold);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-right: 2px solid #000;
+        }
+
+        .stat-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 0;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+            line-height: 18px;
+        }
+
+        /* Intent */
+        #intent {
+            position: absolute;
+            top: -50px;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid var(--gold-border);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        /* UI / Hand */
+        #ui-layer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 300px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 40px;
+        }
+
+        #hand {
+            display: flex;
+            gap: -20px;
+            transition: all 0.3s;
+        }
+
+        .card {
+            width: 150px;
+            height: 210px;
+            background: #fdf6e3;
+            border: 4px solid var(--gold-border);
+            border-radius: 10px;
+            margin: 0 -10px;
+            padding: 10px;
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: transform 0.2s, margin 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            color: var(--ink);
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-40px) scale(1.1);
+            z-index: 1000;
+            margin: 0 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.8);
+        }
+
+        .card-header {
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+            border-bottom: 2px solid var(--gold-border);
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+        }
+
+        .card-cost {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            width: 30px;
+            height: 30px;
+            background: #333;
+            color: white;
+            border: 2px solid var(--gold-border);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .card-body {
+            flex: 1;
+            font-size: 0.9rem;
+            text-align: center;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-footer {
+            font-size: 0.8rem;
+            text-align: center;
+            font-weight: bold;
+            color: var(--faith-blue);
+        }
+
+        /* Resource Bars */
+        #resources {
+            position: absolute;
+            bottom: 250px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            background: rgba(0,0,0,0.6);
+            padding: 10px 30px;
+            border-radius: 30px;
+            border: 2px solid var(--gold-border);
+        }
+
+        .res-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-weight: bold;
+        }
+
+        #faith-meter {
+            width: 200px;
+            height: 15px;
+            background: #222;
+            border: 1px solid var(--gold-border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #faith-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--faith-blue), #fff);
+            transition: width 0.3s ease;
+        }
+
+        #end-turn-btn {
+            position: absolute;
+            right: 50px;
+            bottom: 260px;
+            padding: 15px 30px;
+            background: var(--gold-border);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 5px 0 #5e4513;
+        }
+
+        #end-turn-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #5e4513;
+        }
+
+        .floating-num {
+            position: absolute;
+            font-weight: bold;
+            font-size: 1.5rem;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 1000;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
+
+        .shake { animation: shake 0.2s ease-in-out; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-world">
+        <div id="board"></div>
+
+        <div id="player" class="entity">
+            <div class="sprite">🕊️</div>
+            <div class="stat-container">
+                <div class="stat-text" id="player-hp-text">50 / 50</div>
+                <div class="bar-bg">
+                    <div id="player-hp-fill" class="hp-fill"></div>
+                    <div id="player-block-fill" class="block-overlay"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="enemy" class="entity">
+            <div id="intent">⚔️ 10</div>
+            <div class="sprite">🌑</div>
+            <div class="stat-container">
+                <div class="stat-text" id="enemy-hp-text">100 / 100</div>
+                <div class="bar-bg">
+                    <div id="enemy-hp-fill" class="hp-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="resources">
+            <div class="res-group">
+                <span>⚡ ENERGY: <span id="energy-val">3</span>/3</span>
+            </div>
+            <div class="res-group">
+                <span>✨ FAITH</span>
+                <div id="faith-meter"><div id="faith-fill"></div></div>
+                <span id="faith-val">0/100</span>
+            </div>
+        </div>
+
+        <button id="end-turn-btn">End Turn</button>
+
+        <div id="ui-layer">
+            <div id="hand"></div>
+        </div>
+    </div>
+
+    <script>
+        const CARD_DATA = [
+            { id: 1, name: 'Quiet Prayer', cost: 1, faith: 20, type: 'prayer', desc: 'Gain 20 Faith' },
+            { id: 2, name: 'Fervent Plea', cost: 1, faith: 35, type: 'prayer', desc: 'Gain 35 Faith' },
+            { id: 3, name: 'Shield of Faith', cost: 1, block: 12, type: 'defense', desc: 'Gain 12 Block' },
+            { id: 4, name: 'Patient Peace', cost: 1, block: 18, type: 'defense', desc: 'Gain 18 Block' },
+            { id: 5, name: 'Healing Touch', cost: 0, faithReq: 40, heal: 20, type: 'miracle', desc: 'Heal 20 HP' },
+            { id: 6, name: 'Divine Flame', cost: 0, faithReq: 70, damage: 50, type: 'miracle', desc: 'Deal 50 Damage' },
+            { id: 7, name: 'Heavenly Host', cost: 0, faithReq: 100, damage: 100, heal: 30, type: 'miracle', desc: 'Shatter enemy & heal' },
+        ];
+
+        class Game {
+            constructor() {
+                this.player = { hp: 50, maxHp: 50, block: 0, energy: 3, faith: 0 };
+                this.enemy = { hp: 100, maxHp: 100, intent: 12 };
+                this.deck = [];
+                this.hand = [];
+                this.discard = [];
+
+                this.setupDeck();
+                this.startTurn();
+
+                document.getElementById('end-turn-btn').onclick = () => this.endTurn();
+            }
+
+            setupDeck() {
+                // Standard StS starting deck feel
+                for(let i=0; i<5; i++) this.deck.push({...CARD_DATA[0]});
+                for(let i=0; i<4; i++) this.deck.push({...CARD_DATA[2]});
+                for(let i=0; i<3; i++) this.deck.push({...CARD_DATA[4]});
+                this.shuffle(this.deck);
+            }
+
+            shuffle(arr) {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+            }
+
+            startTurn() {
+                this.player.energy = 3;
+                this.player.block = 0;
+                this.drawCards(5);
+                this.updateUI();
+            }
+
+            drawCards(count) {
+                for(let i=0; i<count; i++) {
+                    if(this.deck.length === 0) {
+                        this.deck = [...this.discard];
+                        this.discard = [];
+                        this.shuffle(this.deck);
+                    }
+                    if(this.deck.length > 0) this.hand.push(this.deck.pop());
+                }
+            }
+
+            playCard(index) {
+                const card = this.hand[index];
+
+                if (card.type === 'miracle') {
+                    if (this.player.faith < card.faithReq) {
+                        this.floatText("Not enough Faith!", 'white', 'player');
+                        return;
+                    }
+                    this.player.faith -= card.faithReq;
+                } else {
+                    if (this.player.energy < card.cost) {
+                        this.floatText("No Energy!", 'white', 'player');
+                        return;
+                    }
+                    this.player.energy -= card.cost;
+                }
+
+                // Apply Effects
+                if (card.faith) {
+                    this.player.faith = Math.min(100, this.player.faith + card.faith);
+                    this.floatText(`+${card.faith} Faith`, 'var(--faith-blue)', 'player');
+                }
+                if (card.damage) {
+                    this.enemy.hp -= card.damage;
+                    this.floatText(`-${card.damage}`, '#ff4444', 'enemy');
+                    this.shake('enemy');
+                }
+                if (card.heal) {
+                    this.player.hp = Math.min(this.player.maxHp, this.player.hp + card.heal);
+                    this.floatText(`+${card.heal}`, '#44ff44', 'player');
+                }
+                if (card.block) {
+                    this.player.block += card.block;
+                    this.floatText(`+${card.block} Block`, 'var(--block-gold)', 'player');
+                }
+
+                this.discard.push(this.hand.splice(index, 1)[0]);
+                this.updateUI();
+
+                if (this.enemy.hp <= 0) {
+                    alert("Victory! The enemy is defeated.");
+                    location.reload();
+                }
+            }
+
+            endTurn() {
+                // Enemy Attack
+                const damage = Math.max(0, this.enemy.intent - this.player.block);
+                this.player.hp -= damage;
+                this.floatText(`-${damage}`, '#ff4444', 'player');
+                this.shake('player');
+
+                // Setup next turn
+                this.discard.push(...this.hand);
+                this.hand = [];
+                this.enemy.intent = Math.floor(Math.random() * 15) + 8;
+
+                if (this.player.hp <= 0) {
+                    alert("Defeat... Faith is a journey. Try again.");
+                    location.reload();
+                }
+
+                this.startTurn();
+            }
+
+            shake(id) {
+                const el = document.getElementById(id);
+                el.classList.add('shake');
+                setTimeout(() => el.classList.remove('shake'), 200);
+            }
+
+            floatText(text, color, targetId) {
+                const target = document.getElementById(targetId);
+                const el = document.createElement('div');
+                el.className = 'floating-num';
+                el.innerText = text;
+                el.style.color = color;
+                el.style.left = '50%';
+                el.style.top = '0';
+                target.appendChild(el);
+                setTimeout(() => el.remove(), 800);
+            }
+
+            updateUI() {
+                document.getElementById('energy-val').innerText = this.player.energy;
+                document.getElementById('faith-val').innerText = `${this.player.faith}/100`;
+                document.getElementById('faith-fill').style.width = this.player.faith + '%';
+
+                document.getElementById('player-hp-fill').style.width = (this.player.hp / this.player.maxHp * 100) + '%';
+                document.getElementById('player-hp-text').innerText = `${this.player.hp} / ${this.player.maxHp}`;
+                document.getElementById('player-block-fill').style.width = Math.min(100, (this.player.block / this.player.maxHp * 100)) + '%';
+
+                document.getElementById('enemy-hp-fill').style.width = (this.enemy.hp / this.enemy.maxHp * 100) + '%';
+                document.getElementById('enemy-hp-text').innerText = `${this.enemy.hp} / ${this.enemy.maxHp}`;
+                document.getElementById('intent').innerText = `⚔️ ${this.enemy.intent}`;
+
+                const handDiv = document.getElementById('hand');
+                handDiv.innerHTML = '';
+                this.hand.forEach((card, i) => {
+                    const cardEl = document.createElement('div');
+                    cardEl.className = `card ${card.type === 'miracle' ? 'miracle' : ''}`;
+                    cardEl.innerHTML = `
+                        <div class="card-cost">${card.cost}</div>
+                        <div class="card-header">${card.name}</div>
+                        <div class="card-body">${card.desc}</div>
+                        <div class="card-footer">${card.type === 'miracle' ? 'Requires ' + card.faithReq + ' Faith' : ''}</div>
+                    `;
+                    cardEl.onclick = () => this.playCard(i);
+                    handDiv.appendChild(cardEl);
+                });
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+</html>

@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pilgrim's Ascent: Armor of God II</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Grenze+Gotisch:wght@500;700&family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+button{touch-action:manipulation}
+:root{
+  --gold:#d8a94e; --gold-hi:#f6dc9a; --gold-dk:#8a6a2a; --gold-line:#5c4a22;
+  --panel:#151923; --parch:#e9dcc0; --dim:#9b917c;
+  --red:#d24b3a; --green:#7ec85a; --teal:#5fd0cd; --purple:#a06bdc;
+}
+html,body{height:100%}
+body{
+  font-family:'Alegreya',Georgia,serif;color:var(--parch);background:#07080c;
+  overflow:hidden;user-select:none;
+  background-image:
+    radial-gradient(120% 70% at 50% -10%, #141b2c 0%, transparent 60%),
+    radial-gradient(90% 60% at 50% 115%, #241407 0%, transparent 55%),
+    linear-gradient(#0a0c12,#07080c);
+}
+.fog{position:fixed;inset:-25%;pointer-events:none;z-index:1;opacity:.55;
+  background:
+   radial-gradient(42% 34% at 28% 38%, rgba(76,98,150,.11), transparent 70%),
+   radial-gradient(36% 30% at 74% 62%, rgba(160,95,42,.08), transparent 70%);
+  animation:fogmove 46s ease-in-out infinite alternate}
+#fog2{animation-duration:63s;animation-direction:alternate-reverse;opacity:.4}
+@keyframes fogmove{from{transform:translate(-3%,0) scale(1.06)}to{transform:translate(3%,2%) scale(1.14)}}
+#embers{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+#embers i{position:absolute;bottom:-12px;width:var(--s);height:var(--s);border-radius:50%;
+  background:radial-gradient(circle,#ffd98a,#ff8c2a 60%,transparent);
+  filter:drop-shadow(0 0 4px #ff9c3f);opacity:0;
+  animation:rise var(--d) linear var(--dl) infinite}
+@keyframes rise{0%{transform:translate(0,0);opacity:0}8%{opacity:.9}65%{opacity:.45}100%{transform:translate(var(--x),-106vh);opacity:0}}
+#noise{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:.055;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+#vignette{position:fixed;inset:0;pointer-events:none;z-index:30;
+  background:radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(0,0,0,.62) 100%)}
+#flash{position:fixed;inset:0;pointer-events:none;z-index:35;opacity:0;
+  background:radial-gradient(90% 90% at 50% 50%, rgba(210,40,20,.28), rgba(120,10,5,.5))}
+#flash.go{animation:flashgo .38s ease-out}
+@keyframes flashgo{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+#errbox{display:none;position:fixed;left:14px;bottom:14px;z-index:999;max-width:72vw;
+  background:#3a0f0f;border:1px solid var(--red);color:#ffb4a6;
+  font:12px/1.5 Consolas,monospace;padding:9px 13px;border-radius:6px;pointer-events:none}
+
+#app{position:relative;z-index:10;height:100vh;display:flex;flex-direction:column}
+
+.frame{position:relative;background:linear-gradient(170deg,#1a1f2c,#111420 70%);
+  border:1px solid var(--gold-line);border-radius:10px;
+  box-shadow:0 0 0 1px #000, 0 18px 50px rgba(0,0,0,.6), inset 0 1px 0 rgba(246,220,154,.08)}
+.frame::after{content:'';position:absolute;inset:5px;border:1px solid rgba(216,169,78,.16);
+  border-radius:7px;pointer-events:none}
+.btn{font-family:'Cinzel',serif;font-weight:700;letter-spacing:.08em;cursor:pointer;
+  color:var(--gold-hi);background:linear-gradient(#3d3116,#241c0c);
+  border:1px solid var(--gold-dk);border-radius:6px;padding:10px 22px;font-size:14px;
+  text-shadow:0 1px 2px #000;box-shadow:0 0 0 1px #000, inset 0 1px 0 rgba(246,220,154,.25);
+  transition:.15s}
+.btn:hover:not(:disabled){filter:brightness(1.3);box-shadow:0 0 0 1px #000,0 0 18px rgba(216,169,78,.35),inset 0 1px 0 rgba(246,220,154,.3)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{font-size:16px;padding:13px 30px;background:linear-gradient(#5a4416,#2c2008)}
+.btn.small{padding:6px 12px;font-size:12px}
+h2.hd{font-family:'Cinzel',serif;letter-spacing:.22em;color:var(--gold-hi);text-align:center;
+  text-shadow:0 0 22px rgba(216,169,78,.35);font-size:24px}
+.sub{color:var(--dim);text-align:center;font-style:italic;margin-top:6px}
+.dim{color:var(--dim)}
+.chip{display:inline-flex;align-items:center;gap:5px;background:#12151d;border:1px solid #2c3345;
+  border-radius:20px;padding:3px 11px;font-size:14px}
+.chip b{color:var(--gold-hi)}
+[data-tip]{position:relative}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:125%;left:50%;transform:translateX(-50%);
+  background:#0c0f16;border:1px solid var(--gold-dk);color:var(--parch);padding:5px 10px;border-radius:5px;
+  font-size:12px;font-family:'Alegreya',serif;white-space:nowrap;z-index:99;pointer-events:none;
+  box-shadow:0 6px 18px rgba(0,0,0,.6)}
+
+#hud{display:none;align-items:center;gap:16px;padding:9px 18px;background:linear-gradient(#12151f,#0d1017);
+  border-bottom:1px solid var(--gold-line);box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:20}
+body.run #hud{display:flex}
+.port{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:22px;
+  background:radial-gradient(circle at 35% 30%,#2e3648,#141824);
+  border:2px solid var(--gold-dk);box-shadow:0 0 12px rgba(216,169,78,.25)}
+.hud-id{min-width:170px}
+#hud-name{font-family:'Cinzel',serif;font-size:13px;letter-spacing:.12em;color:var(--gold-hi)}
+.bar{position:relative;height:15px;border-radius:4px;background:#20100f;border:1px solid #000;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.7);overflow:hidden}
+.bar .fill{height:100%;transition:width .35s ease}
+.bar.hp .fill{background:linear-gradient(#9ade7a,#4e9c3f 55%,#2f6b28)}
+.bar.hp.evil .fill{background:linear-gradient(#f08a6a,#c0392b 55%,#7e2418)}
+.bar span{position:absolute;inset:0;display:grid;place-items:center;font:700 10.5px 'Cinzel',serif;
+  color:#fff;text-shadow:0 1px 2px #000;letter-spacing:.05em}
+#hud-relics{display:flex;gap:7px;flex:1;justify-content:center;flex-wrap:wrap}
+.relic{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:18px;cursor:help;
+  background:radial-gradient(circle at 35% 30%,#3a3020,#191410);border:1px solid var(--gold-dk);
+  box-shadow:0 0 10px rgba(216,169,78,.2);transition:.15s}
+.relic:hover{transform:scale(1.15);box-shadow:0 0 16px rgba(216,169,78,.5)}
+.hud-right{display:flex;align-items:center;gap:10px}
+
+#stage{flex:1;position:relative;overflow:hidden}
+.scr{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;overflow:auto}
+.scr.active{display:flex}
+
+#scr-title{justify-content:center;gap:8px;
+  background:radial-gradient(60% 45% at 50% 30%, rgba(216,169,78,.07), transparent 70%)}
+.game-title{font-family:'Grenze Gotisch',serif;font-size:clamp(44px,7vw,84px);letter-spacing:.06em;
+  color:var(--gold-hi);text-shadow:0 0 40px rgba(216,169,78,.4),0 4px 0 #3a2c10,0 8px 24px #000;
+  animation:titlepulse 4s ease-in-out infinite;text-align:center}
+@keyframes titlepulse{50%{text-shadow:0 0 60px rgba(216,169,78,.6),0 4px 0 #3a2c10,0 8px 24px #000}}
+.subtitle{font-family:'Cinzel',serif;letter-spacing:.4em;color:var(--dim);font-size:15px;margin-bottom:34px;text-align:center}
+.subtitle em{color:var(--red);font-style:normal}
+#class-row{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;padding:0 20px}
+.class-card{width:250px;padding:26px 20px;text-align:center;cursor:pointer;transition:.25s;
+  display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--parch);font-family:'Alegreya',serif}
+.class-card:hover{transform:translateY(-10px);box-shadow:0 0 0 1px #000,0 24px 60px rgba(0,0,0,.7),0 0 34px rgba(216,169,78,.28)}
+.class-card .glyph{font-size:52px;filter:drop-shadow(0 0 14px rgba(216,169,78,.5))}
+.class-card h3{font-family:'Cinzel',serif;color:var(--gold-hi);letter-spacing:.1em;font-size:16px}
+.class-card p{font-size:13.5px;color:var(--dim);line-height:1.4;min-height:58px}
+.class-card .relic-note{font-size:12.5px;color:var(--teal);font-style:italic}
+.class-card .btn{margin-top:6px;pointer-events:none}
+
+#scr-map{padding:22px 0 10px}
+#map{position:relative;width:min(680px,92vw);flex:1;min-height:500px;margin:12px auto 0}
+#map svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.edge{stroke:#6b6250;stroke-width:1.6;vector-effect:non-scaling-stroke;stroke-opacity:.25;fill:none}
+.edge.past{stroke:#caa64f;stroke-opacity:.85}
+.edge.open{stroke:#ffd884;stroke-opacity:1;stroke-dasharray:5 5;animation:dash 1.2s linear infinite;
+  filter:drop-shadow(0 0 4px rgba(255,216,132,.8))}
+@keyframes dash{to{stroke-dashoffset:-10}}
+.mnode{position:absolute;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;
+  display:grid;place-items:center;font-size:19px;cursor:default;color:var(--parch);
+  background:radial-gradient(circle at 35% 30%,#262c3c,#12151e);
+  border:2px solid #3a3f52;box-shadow:0 4px 12px rgba(0,0,0,.6);transition:.2s;z-index:2}
+.mnode.done{opacity:.4;filter:saturate(.5)}
+.mnode.current{border-color:var(--gold);box-shadow:0 0 18px rgba(216,169,78,.55)}
+.mnode.current::after{content:'✦';position:absolute;top:-19px;left:50%;transform:translateX(-50%);
+  color:var(--gold-hi);font-size:14px;text-shadow:0 0 8px var(--gold)}
+.mnode.open{border-color:var(--gold);cursor:pointer;animation:nodepulse 1.5s ease-in-out infinite}
+.mnode.open:hover{transform:translate(-50%,-50%) scale(1.22)}
+@keyframes nodepulse{50%{box-shadow:0 0 22px rgba(216,169,78,.8)}}
+.mnode.boss{width:62px;height:62px;font-size:28px;border-color:#8e2f22;
+  box-shadow:0 0 26px rgba(210,60,40,.5)}
+.mnode.boss.open{animation:nodepulseR 1.5s ease-in-out infinite}
+@keyframes nodepulseR{50%{box-shadow:0 0 34px rgba(255,80,50,.9)}}
+.map-legend{display:flex;gap:20px;color:var(--dim);font-size:13px;padding:8px 0 14px}
+
+#scr-combat{background:
+  linear-gradient(rgba(255,190,90,.05),transparent 30%),
+  radial-gradient(80% 60% at 50% 0%, rgba(90,110,170,.12), transparent 60%)}
+#scr-combat::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:linear-gradient(105deg,transparent 42%,rgba(255,214,140,.06) 47%,transparent 53%,
+    transparent 60%,rgba(255,214,140,.04) 66%,transparent 72%)}
+#field{position:absolute;inset:30px 0 235px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 7% 30px}
+#scr-combat.shake #field{animation:shake .32s}
+@keyframes shake{25%{transform:translate(-8px,4px)}50%{transform:translate(7px,-5px)}75%{transform:translate(-4px,2px)}}
+.fighter{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px}
+.fighter .aura{position:absolute;top:6%;width:170px;height:170px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(120,150,220,.14),transparent 65%)}
+.foe .aura{background:radial-gradient(circle,rgba(200,60,40,.16),transparent 65%)}
+.fighter .fig{font-size:84px;line-height:1;filter:drop-shadow(0 10px 14px rgba(0,0,0,.7));
+  animation:bob 3.2s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-8px)}}
+.hero .fig{font-size:76px}
+.foe.elite .fig{font-size:102px}
+.foe.boss .fig{font-size:136px;filter:drop-shadow(0 12px 16px rgba(0,0,0,.8)) drop-shadow(0 0 26px rgba(255,60,30,.5))}
+.foe.dead{opacity:.18;filter:grayscale(1);transform:scale(.92);transition:.6s}
+.foe.act .fig{animation:lunge .5s ease}
+@keyframes lunge{30%{transform:translateX(-52px) scale(1.06)}}
+.foe.hit .fig{animation:hitf .3s}
+@keyframes hitf{30%{filter:drop-shadow(0 0 18px #ff4020) brightness(2);transform:translateX(8px)}}
+.hero.hurt .fig{animation:hurtf .38s}
+@keyframes hurtf{30%{filter:drop-shadow(0 0 18px #ff4020) brightness(1.8);transform:translateX(-9px)}}
+.fname{font-family:'Cinzel',serif;font-size:13px;letter-spacing:.12em;color:var(--parch);text-shadow:0 2px 3px #000}
+.foe.boss .fname{color:#ff9a86;font-size:15px}
+.fighter .bar{width:150px}
+.foe.boss .bar{width:220px;height:17px}
+.chips{display:flex;gap:5px;min-height:22px;flex-wrap:wrap;justify-content:center}
+.schip{font:700 11px 'Cinzel',serif;padding:2px 8px;border-radius:12px;background:#12151d;
+  border:1px solid #333;white-space:nowrap}
+.schip.blk{color:var(--teal);border-color:#2a5a5a}
+.schip.str{color:#ff9d5c;border-color:#6b3a1a}
+.schip.bad{color:#c98adf;border-color:#4a2a5e}
+.intent{position:absolute;top:-46px;left:50%;transform:translateX(-50%);white-space:nowrap;
+  background:#101319;border:1px solid var(--gold-line);border-radius:16px;padding:4px 12px;
+  font:700 13px 'Cinzel',serif;color:#ffb0a0;box-shadow:0 4px 12px rgba(0,0,0,.5);
+  animation:intentpulse 1.6s ease-in-out infinite;z-index:4}
+@keyframes intentpulse{50%{box-shadow:0 0 14px rgba(255,140,100,.35)}}
+#foes{display:flex;gap:56px;align-items:flex-end}
+.flt{position:absolute;left:50%;top:20%;transform:translateX(-50%);font:900 24px 'Cinzel',serif;
+  text-shadow:0 2px 6px #000;animation:flt 1s ease-out forwards;pointer-events:none;z-index:6;white-space:nowrap}
+.flt.dmg{color:#ff6b52}.flt.blk{color:#6fd6d9;font-size:18px}.flt.heal{color:#8fe07a}.flt.buff{color:#ffd257;font-size:15px}
+@keyframes flt{0%{opacity:0;transform:translate(-50%,10px) scale(.6)}15%{opacity:1;transform:translate(-50%,0) scale(1.15)}100%{opacity:0;transform:translate(-50%,-52px) scale(1)}}
+.battle-banner{position:absolute;top:16%;left:50%;transform:translateX(-50%);pointer-events:none;z-index:8;
+  font-family:'Grenze Gotisch',serif;font-size:42px;letter-spacing:.1em;color:var(--gold-hi);
+  text-shadow:0 0 30px rgba(216,169,78,.5),0 3px 8px #000;opacity:0;white-space:nowrap}
+.battle-banner.go{animation:bannerIn 2s ease forwards}
+@keyframes bannerIn{0%{opacity:0;transform:translateX(-50%) scale(.85)}18%{opacity:1;transform:translateX(-50%) scale(1)}75%{opacity:1}100%{opacity:0;transform:translateX(-50%) scale(1.05)}}
+#target-hint{display:none;position:absolute;top:52px;left:50%;transform:translateX(-50%);z-index:9;
+  font-family:'Cinzel',serif;font-size:14px;letter-spacing:.15em;color:#ffb0a0;
+  background:rgba(20,10,10,.85);border:1px solid #8e2f22;border-radius:20px;padding:6px 18px}
+#scr-combat.targeting #target-hint{display:block}
+#scr-combat.targeting .foe:not(.dead){cursor:crosshair}
+#scr-combat.targeting .foe:not(.dead) .fig{filter:drop-shadow(0 0 14px rgba(255,60,30,.8))}
+
+#hand{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;z-index:12;
+  padding:0 130px}
+#hand .card{margin:0 -19px;cursor:pointer;transform:rotate(var(--rot)) translateY(var(--ty));
+  transition:transform .18s ease,box-shadow .18s,opacity .18s}
+#hand .card:hover{transform:translateY(-52px) scale(1.34) rotate(0deg);z-index:60;
+  box-shadow:0 26px 50px rgba(0,0,0,.75),0 0 26px rgba(216,169,78,.35)}
+#hand .card.sel{transform:translateY(-34px) scale(1.12);z-index:55;
+  box-shadow:0 0 0 2px var(--gold-hi),0 0 30px rgba(255,216,132,.6)}
+#hand .card.dark{filter:grayscale(.75) brightness(.6)}
+#hand .card.played{transform:translateY(-150px) scale(1.15) !important;opacity:0}
+.corner{position:absolute;bottom:14px;display:flex;align-items:center;gap:14px;z-index:11}
+.corner.left{left:22px}.corner.right{right:22px}
+#orb{width:82px;height:82px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 35% 28%,#ffe6a8,#e89a2e 45%,#6b3a0a 78%,#2a1602);
+  border:3px solid #3a2506;box-shadow:0 0 26px rgba(232,154,46,.55),inset 0 -6px 14px rgba(0,0,0,.5);
+  animation:orbpulse 2.6s ease-in-out infinite}
+#orb.empty{filter:grayscale(.7) brightness(.65);animation:none}
+#orb.deny{animation:deny .3s}
+@keyframes deny{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes orbpulse{50%{box-shadow:0 0 40px rgba(232,154,46,.8),inset 0 -6px 14px rgba(0,0,0,.5)}}
+#orb span{font:900 24px 'Cinzel',serif;color:#3a1f04;text-shadow:0 1px 0 rgba(255,240,200,.6)}
+.pile{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.14em;color:var(--dim);cursor:pointer;
+  background:linear-gradient(#1c212e,#12151d);border:1px solid #333a4d;border-radius:8px;
+  padding:8px 12px;text-align:center;transition:.15s}
+.pile b{display:block;font-size:17px;color:var(--gold-hi)}
+.pile:hover{border-color:var(--gold-dk);color:var(--parch)}
+#btn-end{position:absolute;right:26px;top:44%;z-index:11;font-size:15px;padding:16px 26px}
+
+.card{width:148px;height:210px;border-radius:11px;position:relative;flex-shrink:0;
+  background:linear-gradient(165deg,#33301f,#191510 70%);
+  box-shadow:0 0 0 1px #000,0 0 0 2.5px var(--ring,#7d8494),0 8px 18px rgba(0,0,0,.55),inset 0 1px 0 rgba(246,220,154,.14);
+  display:flex;flex-direction:column}
+.card.r-common{--ring:#8b93a5}.card.r-uncommon{--ring:var(--gold)}.card.r-rare{--ring:var(--purple)}
+.card.r-rare{box-shadow:0 0 0 1px #000,0 0 0 2.5px var(--ring),0 0 16px rgba(160,107,220,.4),0 8px 18px rgba(0,0,0,.55)}
+.card .cost{position:absolute;top:-9px;left:-9px;width:31px;height:31px;border-radius:50%;z-index:3;
+  display:grid;place-items:center;font:900 16px 'Cinzel',serif;color:#2c1a03;
+  background:radial-gradient(circle at 35% 30%,#ffe9b0,#dfa63c 55%,#8a5d16);
+  border:2px solid #4a340c;box-shadow:0 2px 6px rgba(0,0,0,.6)}
+.card .art{margin:9px 9px 5px;height:76px;border-radius:6px;display:grid;place-items:center;
+  font-size:40px;border:1px solid rgba(0,0,0,.6);box-shadow:inset 0 0 18px rgba(0,0,0,.6)}
+.card .art span{filter:drop-shadow(0 0 9px rgba(255,220,150,.55))}
+.card.attack .art{background:radial-gradient(70% 90% at 50% 60%,rgba(190,60,40,.5),rgba(30,12,10,.9))}
+.card.skill .art{background:radial-gradient(70% 90% at 50% 60%,rgba(200,160,70,.4),rgba(28,24,12,.9))}
+.card.power .art{background:radial-gradient(70% 90% at 50% 60%,rgba(140,90,200,.45),rgba(22,14,30,.9))}
+.card .cname{font:700 11px 'Cinzel',serif;letter-spacing:.05em;text-transform:uppercase;text-align:center;
+  color:var(--parch);background:linear-gradient(#232836,#151823);border-block:1px solid var(--gold-line);
+  padding:3.5px 4px;text-shadow:0 1px 2px #000}
+.card.upgraded .cname{color:#ffe9a8}
+.card .cdesc{flex:1;font-size:12.5px;line-height:1.32;text-align:center;color:#d9d0ba;padding:6px 9px}
+.card .cdesc b{color:var(--gold-hi)}
+.card .cdesc b.kw{color:var(--teal)}
+.card .ctype{font:600 8.5px 'Cinzel',serif;letter-spacing:.22em;text-transform:uppercase;color:#8d8470;
+  text-align:center;padding:0 0 7px}
+.rw-cards{display:flex;gap:22px;justify-content:center;margin:20px 0;flex-wrap:wrap}
+.rw-cards .card{cursor:pointer;transition:transform .18s,box-shadow .18s}
+.rw-cards .card:hover{transform:translateY(-12px) scale(1.07);
+  box-shadow:0 0 0 1px #000,0 0 0 2.5px var(--gold-hi),0 0 30px rgba(246,220,154,.5),0 18px 30px rgba(0,0,0,.6)}
+
+#scr-camp,#scr-shop{justify-content:center;gap:14px;
+  background:radial-gradient(50% 40% at 50% 42%,rgba(255,150,50,.07),transparent 70%)}
+.campfire{font-size:84px;filter:drop-shadow(0 0 30px rgba(255,150,40,.8));animation:flame 1.6s ease-in-out infinite alternate}
+@keyframes flame{from{transform:scale(1) rotate(-2deg)}to{transform:scale(1.1) rotate(2deg)}}
+.camp-opts{display:flex;gap:26px;margin-top:14px;flex-wrap:wrap;justify-content:center}
+.opt{width:230px;padding:22px 18px;text-align:center;cursor:pointer;color:var(--parch);font-family:'Alegreya',serif;transition:.2s;font-size:14px}
+.opt b{display:block;font-family:'Cinzel',serif;color:var(--gold-hi);font-size:16px;margin:8px 0 6px;letter-spacing:.06em}
+.opt span{color:var(--dim);font-size:13.5px}
+.opt:hover:not(:disabled){transform:translateY(-6px);box-shadow:0 0 0 1px #000,0 0 26px rgba(216,169,78,.3),0 18px 40px rgba(0,0,0,.6)}
+.opt:disabled{opacity:.4;cursor:default}
+.shop-wrap{width:min(860px,94vw);padding:26px 34px;display:flex;flex-direction:column;gap:14px;margin:20px 0}
+.shop-head{display:flex;align-items:center;gap:20px}
+.merchant{font-size:56px;filter:drop-shadow(0 0 16px rgba(216,169,78,.4));animation:bob 3s ease-in-out infinite alternate}
+.shop-head p{color:var(--dim);font-style:italic}
+.shop-wrap h3{font-family:'Cinzel',serif;letter-spacing:.2em;color:var(--gold);font-size:13px;
+  border-bottom:1px solid var(--gold-line);padding-bottom:4px;margin-top:8px;text-align:left}
+.shop-cards{display:flex;gap:18px;flex-wrap:wrap}
+.shop-item{display:flex;flex-direction:column;align-items:center;gap:8px}
+.price-tag{font:700 14px 'Cinzel',serif;color:#ffd257;cursor:pointer;background:#191408;
+  border:1px solid var(--gold-dk);border-radius:14px;padding:3px 14px;transition:.15s}
+.price-tag:hover{box-shadow:0 0 12px rgba(255,210,87,.4)}
+.price-tag.off{opacity:.35;cursor:default;text-decoration:line-through}
+.relic-offer{display:flex;align-items:center;gap:14px;background:#12151d;border:1px solid var(--gold-line);
+  border-radius:8px;padding:10px 16px;width:fit-content}
+.relic-offer .glyph{font-size:34px;filter:drop-shadow(0 0 10px rgba(216,169,78,.5))}
+#scr-end{justify-content:center;gap:16px;text-align:center;
+  background:radial-gradient(60% 50% at 50% 40%,rgba(216,169,78,.09),transparent 70%)}
+#scr-end.lose{background:radial-gradient(60% 50% at 50% 40%,rgba(160,30,20,.14),transparent 70%)}
+.end-title{font-family:'Grenze Gotisch',serif;font-size:58px;color:var(--gold-hi);
+  text-shadow:0 0 40px rgba(216,169,78,.45),0 5px 12px #000}
+#scr-end.lose .end-title{color:#e06a55;text-shadow:0 0 40px rgba(210,60,40,.5),0 5px 12px #000}
+.end-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+
+.overlay{position:fixed;inset:0;display:none;place-items:center;background:rgba(4,5,9,.8);
+  backdrop-filter:blur(4px);z-index:70}
+.overlay.show{display:grid}
+#overlay-box{width:min(760px,94vw);max-height:88vh;padding:28px 32px;overflow:auto;text-align:center}
+.deckgrid{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin:20px 0}
+.deckgrid.mode-pick .card{cursor:pointer;transition:transform .15s,box-shadow .15s}
+.deckgrid.mode-pick .card:hover{transform:translateY(-8px) scale(1.05);
+  box-shadow:0 0 0 1px #000,0 0 0 2.5px var(--gold-hi),0 0 26px rgba(246,220,154,.5)}
+.rw-line{font-size:16px;padding:5px 0}
+.rw-line b{color:var(--gold-hi)}
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);z-index:90;opacity:0;
+  background:#12151d;border:1px solid var(--gold-dk);color:var(--gold-hi);font-family:'Cinzel',serif;
+  font-size:14px;letter-spacing:.08em;padding:9px 22px;border-radius:22px;pointer-events:none;
+  transition:.3s;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:900px){
+  .card{width:124px;height:178px}.card .art{height:58px;font-size:30px}.card .cdesc{font-size:11px}
+  #hand .card:hover{transform:translateY(-40px) scale(1.22)}
+  .fighter .fig{font-size:64px}.foe.boss .fig{font-size:100px}
+  .corner.left{left:8px}.corner.right{right:8px}#hand{padding:0 90px}
+}
+</style>
+</head>
+<body>
+<div class="fog" id="fog1"></div><div class="fog" id="fog2"></div>
+<div id="embers"></div>
+
+<div id="app">
+  <header id="hud">
+    <div style="display:flex;align-items:center;gap:11px">
+      <div class="port" id="hud-port">✠</div>
+      <div class="hud-id">
+        <div id="hud-name">PILGRIM</div>
+        <div class="bar hp"><div class="fill" id="hud-hpf" style="width:100%"></div><span id="hud-hpt">80 / 80</span></div>
+      </div>
+    </div>
+    <div id="hud-relics"></div>
+    <div class="hud-right">
+      <div class="chip">🪙 <b id="hud-gold">99</b></div>
+      <div class="chip">🗺️ Floor <b id="hud-floor">1</b></div>
+      <button class="btn small" data-act="open-deck">📜 DECK <b id="hud-deckn">0</b></button>
+      <button class="btn small" data-act="toggle-audio" id="btn-audio">🔊</button>
+    </div>
+  </header>
+
+  <main id="stage">
+    <section class="scr active" id="scr-title">
+      <h1 class="game-title">PILGRIM'S ASCENT</h1>
+      <div class="subtitle">ARMOR OF GOD II — <em>SLAY THE SHADOWS</em></div>
+      <div id="class-row"></div>
+    </section>
+
+    <section class="scr" id="scr-map">
+      <h2 class="hd" style="margin-top:14px">THE PATH OF ASCENT</h2>
+      <p class="sub">Choose an available sanctuary or battle site to advance.</p>
+      <div id="map"></div>
+      <div class="map-legend"><span>⚔ Battle</span><span>☠ Elite</span><span>🔥 Sanctuary</span><span>⚖ Merchant</span><span>👑 Arch-Fiend</span></div>
+    </section>
+
+    <section class="scr" id="scr-combat">
+      <div class="battle-banner" id="banner"></div>
+      <div id="target-hint">⚔ CHOOSE A TARGET — right-click to cancel ⚔</div>
+      <div id="field">
+        <div class="fighter hero" id="hero">
+          <div class="aura"></div><div class="fig" id="hero-fig">🛡️</div>
+          <div class="fname" id="hero-name">PILGRIM</div>
+          <div class="bar hp"><div class="fill" id="hero-hpf"></div><span id="hero-hpt"></span></div>
+          <div class="chips" id="hero-chips"></div>
+        </div>
+        <div id="foes"></div>
+      </div>
+      <button class="btn primary" id="btn-end" data-act="end-turn">END TURN</button>
+      <div class="corner left">
+        <div id="orb"><span id="orb-txt">3/3</span></div>
+        <button class="pile" data-act="open-draw">DRAW<b id="draw-n">0</b></button>
+      </div>
+      <div class="corner right"><button class="pile" data-act="open-discard">DISCARD<b id="discard-n">0</b></button></div>
+      <div id="hand"></div>
+    </section>
+
+    <section class="scr" id="scr-camp">
+      <div class="campfire">🔥</div>
+      <h2 class="hd">SANCTUARY CAMPFIRE</h2>
+      <p class="sub">The road is long. Choose thy respite, pilgrim.</p>
+      <div class="camp-opts">
+        <button class="opt frame" id="camp-rest" data-act="camp-rest">💖<b>REST &amp; PRAY</b><span>Restore 30% of thy Max HP (<b id="camp-amt" style="color:var(--green)">+24</b> HP)</span></button>
+        <button class="opt frame" id="camp-forge" data-act="camp-forge">🔨<b>FORGE ARMOR</b><span>Upgrade a card in thy deck permanently</span></button>
+      </div>
+      <button class="btn primary" id="camp-continue" data-act="camp-continue" hidden>CONTINUE JOURNEY ➤</button>
+    </section>
+
+    <section class="scr" id="scr-shop"><div class="shop-wrap frame" id="shop-box"></div></section>
+    <section class="scr" id="scr-end"></section>
+  </main>
+</div>
+
+<div class="overlay" id="overlay"><div id="overlay-box" class="frame"></div></div>
+<div id="flash"></div><div id="noise"></div><div id="vignette"></div><div id="toast"></div><div id="errbox"></div>
+
+<script>
+'use strict';
+/* ---------- visible error reporting ---------- */
+window.addEventListener('error',function(e){
+  var b=document.getElementById('errbox');
+  if(b){b.style.display='block';b.textContent='⚠ '+e.message+' (line '+e.lineno+')';}
+});
+
+/* ---------- helpers ---------- */
+function $(s){return document.querySelector(s)}
+function $$(s){return Array.prototype.slice.call(document.querySelectorAll(s))}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function ri(a,b){return Math.floor(a+Math.random()*(b-a+1))}
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+var UID=1, busy=false, targeting=-1, audioOn=true, pending=null, deckMode=null, G=null;
+
+/* ---------- audio ---------- */
+var ACtx=null;
+function ac(){try{if(!ACtx){var AC=window.AudioContext||window.webkitAudioContext;if(AC)ACtx=new AC()}if(ACtx&&ACtx.state==='suspended')ACtx.resume()}catch(e){}return ACtx}
+function tone(f,d,type,g,t0,slide){var a=ac();if(!a||!audioOn)return;try{
+ var o=a.createOscillator(),v=a.createGain(),t=a.currentTime+(t0||0);
+ o.type=type||'sine';o.frequency.setValueAtTime(f,t);
+ if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),t+d);
+ v.gain.setValueAtTime(.0001,t);v.gain.exponentialRampToValueAtTime(g||.1,t+.012);
+ v.gain.exponentialRampToValueAtTime(.0001,t+d);
+ o.connect(v);v.connect(a.destination);o.start(t);o.stop(t+d+.05)}catch(e){}}
+function sfx(n){if(!audioOn)return;switch(n){
+ case 'card':tone(520,.09,'triangle',.1);tone(780,.08,'triangle',.06,.04);break;
+ case 'hit':tone(140,.16,'square',.15,0,-90);tone(90,.2,'sawtooth',.09,.02,-40);break;
+ case 'block':tone(300,.08,'square',.07);tone(620,.12,'sine',.07,.03);break;
+ case 'heal':tone(523,.15,'sine',.08);tone(659,.15,'sine',.08,.07);tone(784,.15,'sine',.08,.14);break;
+ case 'gold':tone(988,.07,'square',.06);tone(1319,.1,'square',.05,.06);break;
+ case 'turn':tone(392,.13,'sine',.08);break;
+ case 'draw':tone(880,.05,'triangle',.05);break;
+ case 'win':tone(523,.24,'triangle',.1);tone(659,.24,'triangle',.1,.11);tone(784,.24,'triangle',.1,.22);tone(1047,.3,'triangle',.1,.33);break;
+ case 'lose':tone(220,.5,'sawtooth',.11,0,-120);tone(110,.9,'sine',.11,.15,-60);break;
+ case 'click':tone(700,.05,'triangle',.06);break;
+ case 'boss':tone(65,.7,'sawtooth',.13,0,-20);tone(98,.6,'square',.07,.1,-30);break;
+ case 'buy':tone(660,.08,'triangle',.08);tone(880,.1,'triangle',.06,.07);break;
+ case 'err':tone(180,.16,'square',.09);break}}
+document.addEventListener('pointerdown',function(){ac()},{once:true});
+
+/* ---------- data ---------- */
+var KW_B='<b class="kw">Block</b>', KW_S='<b>Strength</b>', KW_V='<b>Vulnerable</b>', KW_X='<i>Exhaust</i>';
+var CARDS={
+ strike:{name:'Strike',cost:1,type:'attack',rar:'starter',glyph:'🗡️',v:{dmg:6},u:{dmg:9},d:function(v){return 'Deal <b>'+v.dmg+'</b> damage.'}},
+ defend:{name:'Defend',cost:1,type:'skill',rar:'starter',glyph:'🛡️',v:{block:5},u:{block:8},d:function(v){return 'Gain <b>'+v.block+'</b> '+KW_B+'.'}},
+ smite:{name:'Smite',cost:1,type:'attack',rar:'common',glyph:'⚡',v:{dmg:9},u:{dmg:13},d:function(v){return 'Deal <b>'+v.dmg+'</b> damage.'}},
+ prayer:{name:'Prayer',cost:0,type:'skill',rar:'common',glyph:'🕊️',v:{block:3,draw:1},u:{block:6},d:function(v){return 'Gain <b>'+v.block+'</b> '+KW_B+'.<br>Draw <b>1</b> card.'}},
+ blessing:{name:'Blessing',cost:1,type:'skill',rar:'common',glyph:'✨',v:{draw:2},u:{draw:3},d:function(v){return 'Draw <b>'+v.draw+'</b> cards.'}},
+ consecrate:{name:'Consecrate',cost:1,type:'attack',rar:'common',glyph:'🔥',v:{dmg:4,aoe:1},u:{dmg:7},d:function(v){return 'Deal <b>'+v.dmg+'</b> damage to <b>ALL</b> foes.'}},
+ psalm:{name:'Psalm of Hope',cost:1,type:'skill',rar:'common',glyph:'🎵',v:{block:4,heal:3},u:{block:6,heal:5},d:function(v){return 'Gain <b>'+v.block+'</b> '+KW_B+'.<br>Heal <b>'+v.heal+'</b> HP.'}},
+ water:{name:'Living Water',cost:0,type:'skill',rar:'common',glyph:'💧',v:{heal:4,exhaust:1},u:{heal:8},d:function(v){return 'Heal <b>'+v.heal+'</b> HP.<br>'+KW_X+'.'}},
+ radiance:{name:'Radiant Light',cost:2,type:'attack',rar:'uncommon',glyph:'☀️',v:{dmg:15},u:{dmg:20},d:function(v){return 'Deal <b>'+v.dmg+'</b> damage.'}},
+ bulwark:{name:'Divine Bulwark',cost:2,type:'skill',rar:'uncommon',glyph:'🏰',v:{block:14},u:{block:19},d:function(v){return 'Gain <b>'+v.block+'</b> '+KW_B+'.'}},
+ armor:{name:'Armor of God',cost:1,type:'skill',rar:'uncommon',glyph:'✠',v:{block:6,draw:1},u:{block:9},d:function(v){return 'Gain <b>'+v.block+'</b> '+KW_B+'.<br>Draw <b>1</b> card.'}},
+ fury:{name:'Righteous Fury',cost:1,type:'power',rar:'uncommon',glyph:'⚔️',v:{str:2},u:{str:3},d:function(v){return 'Gain <b>'+v.str+'</b> '+KW_S+'.'}},
+ pillar:{name:'Pillar of Fire',cost:2,type:'attack',rar:'rare',glyph:'☄️',v:{dmg:5,times:3},u:{dmg:7},d:function(v){return 'Deal <b>'+v.dmg+'</b> damage <b>3</b> times.'}},
+ judgment:{name:'Judgment',cost:2,type:'attack',rar:'rare',glyph:'⚖️',v:{dmg:13,vuln:2},u:{dmg:18},d:function(v){return 'Deal <b>'+v.dmg+'</b> damage.<br>Apply <b>2</b> '+KW_V+'.'}},
+ wrath:{name:'Divine Wrath',cost:3,type:'attack',rar:'rare',glyph:'🌩️',v:{dmg:27},u:{dmg:36},d:function(v){return 'Deal <b>'+v.dmg+'</b> damage.'}},
+ sanctuary:{name:'Sanctuary',cost:2,type:'skill',rar:'rare',glyph:'⛪',v:{heal:9,block:5,exhaust:1},u:{heal:14,block:8},d:function(v){return 'Heal <b>'+v.heal+'</b> HP. Gain <b>'+v.block+'</b> '+KW_B+'.<br>'+KW_X+'.'}}
+};
+var RELICS={
+ shieldFaith:{name:'Shield of Faith',glyph:'🛡️',tip:'+4 Block at start of combat.'},
+ mantle:{name:"Elijah's Mantle",glyph:'🔥',tip:'+2 Strength at start of combat.'},
+ harp:{name:"David's Harp",glyph:'🎶',tip:'+1 Energy on turn 1.'},
+ oil:{name:'Oil of Gladness',glyph:'🏺',tip:'Heal 3 HP after each victory.'},
+ sword:{name:'Sword of the Spirit',glyph:'🗡️',tip:'+1 Strength at start of combat.'},
+ censer:{name:'Censer of Incense',glyph:'⚱️',tip:'Gain 2 Block at start of each turn.'},
+ manna:{name:'Hidden Manna',glyph:'🍞',tip:'+8 Max HP when acquired.'}};
+var CLASSES={
+ knight:{name:'Knight of Faith',glyph:'🛡️',hp:85,blurb:'Clad in heavy defenses, unshaken by the dark.',
+  relic:'shieldFaith',deck:['strike','strike','strike','strike','strike','defend','defend','defend','defend','smite','armor']},
+ prophet:{name:'Prophet of Flame',glyph:'📖',hp:76,blurb:'Wields righteous fire and the old prophet\u2019s mantle.',
+  relic:'mantle',deck:['strike','strike','strike','strike','defend','defend','defend','defend','consecrate','consecrate','radiance']},
+ psalmist:{name:'Psalmist of Grace',glyph:'🎶',hp:70,blurb:'Restores the weary through song and scripture.',
+  relic:'harp',deck:['strike','strike','strike','strike','defend','defend','defend','defend','psalm','psalm','blessing','water']}};
+var FOES={
+ imp:{name:'Shadow Imp',glyph:'👿',hp:[20,26],pool:[{k:'atk',d:6},{k:'atk',d:4,t:2},{k:'buff',s:2}]},
+ hollow:{name:'Wretched Hollow',glyph:'🧟',hp:[24,30],pool:[{k:'atk',d:8},{k:'debuff',d:4,weak:1},{k:'buff',s:2}]},
+ wraith:{name:'Wraith of Doubt',glyph:'👻',hp:[26,32],pool:[{k:'atk',d:8},{k:'debuff',d:5,vuln:1},{k:'atk',d:4,t:2}]},
+ serpent:{name:'Serpent of Lies',glyph:'🐍',hp:[30,36],pool:[{k:'atk',d:10},{k:'debuff',d:6,weak:1},{k:'atk',d:5,t:2}]},
+ sentry:{name:'Fallen Sentry',glyph:'🗿',hp:[34,40],pool:[{k:'atk',d:9},{k:'def',b:10},{k:'atkdef',d:6,b:6},{k:'atk',d:13}]},
+ thrall:{name:'Thrall of Mammon',glyph:'👺',hp:[38,46],pool:[{k:'buff',s:3},{k:'atk',d:13},{k:'def',b:12},{k:'atk',d:16}]},
+ warden:{name:'Crimson Warden',glyph:'👹',hp:[60,68],elite:1,pool:[{k:'atk',d:7,t:2},{k:'atk',d:16},{k:'atkdef',d:9,b:8},{k:'buff',s:2}]},
+ goliath:{name:'Goliath of Gath',glyph:'🏹',hp:[64,72],elite:1,pool:[{k:'atk',d:12},{k:'atk',d:8,t:2},{k:'def',b:14},{k:'atk',d:19}]},
+ fiend:{name:'THE ARCH-FIEND',glyph:'🐲',hp:[126,126],boss:1,cycle:1,pool:[{k:'atk',d:9,t:2},{k:'buff',s:3},{k:'atk',d:21},{k:'debuff',d:8,weak:1},{k:'atk',d:7,t:3}]}};
+var NODE_ICON={combat:'⚔',elite:'☠',camp:'🔥',shop:'⚖',boss:'👑'};
+var PRICE={common:48,uncommon:72,rare:112};
+var ROWS=9;
+
+/* ---------- state / ui utils ---------- */
+function mkCard(id){return {id:id,up:false,uid:UID++}}
+function has(rid){return G&&G.relics.some(function(r){return r.id===rid})}
+function addRelic(id){G.relics.push({id:id});var r=RELICS[id];
+ if(id==='manna'){G.maxHp+=8;G.hp+=8}
+ toast('Relic gained: '+r.glyph+' '+r.name);renderHUD()}
+function showScreen(id){$$('.scr').forEach(function(s){s.classList.toggle('active',s.id==='scr-'+id)})}
+function toast(t){var el=$('#toast');el.textContent=t;el.classList.add('show');
+ clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show')},2200)}
+function flashRed(){var f=$('#flash');f.classList.remove('go');void f.offsetWidth;f.classList.add('go')}
+function shakeScr(){var s=$('#scr-combat');s.classList.remove('shake');void s.offsetWidth;s.classList.add('shake')}
+function float(el,txt,cls){if(!el)return;var s=document.createElement('span');s.className='flt '+cls;
+ s.textContent=txt;el.appendChild(s);setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s)},1000)}
+function banner(t){var b=$('#banner');b.textContent=t;b.classList.remove('go');void b.offsetWidth;b.classList.add('go')}
+
+function newGame(key){var c=CLASSES[key];
+ G={clsKey:key,hp:c.hp,maxHp:c.hp,gold:99,deck:c.deck.map(mkCard),relics:[{id:c.relic}],
+    row:-1,nodeIdx:null,floor:1,map:genMap(),campUsed:false,shop:null,combat:null};
+ document.body.classList.add('run');renderHUD();showScreen('map');renderMap();
+ toast('Choose thy path, pilgrim.')}
+function toTitle(){G=null;document.body.classList.remove('run');hideOverlay();showScreen('title')}
+
+/* ---------- HUD ---------- */
+function renderHUD(){if(!G)return;var c=CLASSES[G.clsKey];
+ $('#hud-port').textContent=c.glyph;$('#hud-name').textContent=c.name.toUpperCase();
+ $('#hud-hpf').style.width=(100*G.hp/G.maxHp)+'%';$('#hud-hpt').textContent=G.hp+' / '+G.maxHp;
+ $('#hud-gold').textContent=G.gold;$('#hud-floor').textContent=G.floor;$('#hud-deckn').textContent=G.deck.length;
+ $('#hud-relics').innerHTML=G.relics.map(function(r){var d=RELICS[r.id];
+  return '<div class="relic" data-tip="'+d.name+' — '+d.tip+'">'+d.glyph+'</div>'}).join('')}
+
+/* ---------- card html ---------- */
+function valsOf(inst){var d=CARDS[inst.id];var out={};var k;
+ for(k in d.v)out[k]=d.v[k];
+ if(inst.up&&d.u)for(k in d.u)out[k]=d.u[k];
+ return out}
+function cardHTML(inst,extra){extra=extra||'';var d=CARDS[inst.id],v=valsOf(inst);
+ return '<div class="card '+d.type+' r-'+d.rar+(inst.up?' upgraded':'')+'" data-uid="'+inst.uid+'" '+extra+'>'
+  +'<div class="cost">'+d.cost+'</div>'
+  +'<div class="art"><span>'+d.glyph+'</span></div>'
+  +'<div class="cname">'+d.name+(inst.up?'+':'')+'</div>'
+  +'<div class="cdesc">'+d.d(v)+'</div>'
+  +'<div class="ctype">'+d.type+' · '+(inst.up?'blessed':d.rar)+'</div></div>'}
+
+/* ---------- map ---------- */
+function genMap(){var M=[],r,i;
+ for(r=0;r<ROWS;r++){
+  var c=(r===ROWS-1)?1:(2+(Math.random()<.5?1:0));var row=[];
+  for(i=0;i<c;i++){var x=(c===1)?.5:.18+i*(.64/(c-1));
+   x+=(c===1)?(Math.random()-.5)*.3:(Math.random()-.5)*.07;
+   row.push({x:x,type:'combat',links:[],cleared:false})}
+  M.push(row)}
+ for(r=1;r<ROWS-1;r++)for(i=0;i<M[r].length;i++){var n=M[r][i];
+  if(r===7){n.type='camp';continue}
+  var q=Math.random();
+  n.type=(r>=4&&q<.14)?'elite':(q<.26)?'camp':(q<.38)?'shop':'combat'}
+ var hasShop=M.slice(1,7).some(function(row){return row.some(function(n){return n.type==='shop'})});
+ if(!hasShop)M[2][0].type='shop';
+ for(r=0;r<ROWS-1;r++){var a=M[r],b=M[r+1];
+  a.forEach(function(n,i){
+   var order=b.map(function(_,j){return j}).sort(function(p,j2){return Math.abs(b[p].x-n.x)-Math.abs(b[j2].x-n.x)});
+   n.links=[order[0]];
+   if(b.length>1&&Math.random()<.55&&Math.abs(b[order[1]].x-n.x)<.5)n.links.push(order[1])});
+  b.forEach(function(m,j){
+   var covered=a.some(function(n){return n.links.indexOf(j)>=0});
+   if(!covered){var bi=0;a.forEach(function(n,i){if(Math.abs(n.x-m.x)<Math.abs(a[bi].x-m.x))bi=i});a[bi].links.push(j)}});
+  a.forEach(function(n){n.links=n.links.filter(function(v,i2,arr){return arr.indexOf(v)===i2})})}
+ return M}
+var availSet={};
+function computeAvail(){availSet={};
+ var list;
+ if(!G)return;
+ if(G.row===-1){G.map[0].forEach(function(_,j){availSet['0,'+j]=1})}
+ else G.map[G.row][G.nodeIdx].links.forEach(function(j){availSet[(G.row+1)+','+j]=1})}
+function isAvail(r,j){return !!availSet[r+','+j]}
+function yOf(r){return 8+(ROWS-1-r)*(84/(ROWS-1))}
+function renderMap(){if(!G)return;computeAvail();
+ var M=G.map,svg='<svg viewBox="0 0 100 100" preserveAspectRatio="none">',r;
+ for(r=0;r<ROWS-1;r++)M[r].forEach(function(n,i){n.links.forEach(function(j){
+  var m=M[r+1][j],cls='edge';
+  if(G.row>=0&&r===G.row&&G.nodeIdx===i)cls+=' open';
+  else if(r<G.row)cls+=' past';
+  svg+='<line class="'+cls+'" x1="'+(n.x*100)+'" y1="'+yOf(r)+'" x2="'+(m.x*100)+'" y2="'+yOf(r+1)+'"/>'})});
+ svg+='</svg>';
+ var nodes='';
+ M.forEach(function(row,r2){row.forEach(function(n,j){var cls='mnode';
+  if(n.type==='boss')cls+=' boss';
+  if(r2<G.row||(r2===G.row&&j===G.nodeIdx))cls+=' done';
+  if(r2===G.row&&j===G.nodeIdx)cls+=' current';
+  if(isAvail(r2,j))cls+=' open';
+  nodes+='<button class="'+cls+'" style="left:'+(n.x*100)+'%;top:'+yOf(r2)+'%" data-act="node" data-r="'+r2+'" data-j="'+j+'" data-tip="'+n.type.toUpperCase()+' — Floor '+(r2+1)+'">'+NODE_ICON[n.type]+'</button>'})});
+ $('#map').innerHTML=svg+nodes}
+function enterNode(r,i){var n=G.map[r][i];G.row=r;G.nodeIdx=i;G.floor=r+1;renderHUD();
+ if(n.type==='combat'||n.type==='elite'||n.type==='boss'){
+  var foes=(n.type==='boss')?[mkFoe('fiend',r)]:makeEncounter(r,n.type==='elite');
+  startCombat(foes,n.type)}
+ else if(n.type==='camp')openCamp();
+ else openShop()}
+function backToMap(){if(!G)return;G.combat=null;showScreen('map');renderMap();renderHUD()}
+
+/* ---------- combat setup ---------- */
+function mkFoe(key,r){var d=FOES[key],mult=1+r*.05,hp=Math.round(ri(d.hp[0],d.hp[1])*mult);
+ return {key:key,def:d,name:d.name,glyph:d.glyph,hp:hp,maxHp:hp,block:0,str:0,weak:0,vuln:0,
+  db:Math.floor(r*.5),mi:-1,move:null,elite:!!d.elite,boss:!!d.boss,ci:-1,idx:0}}
+function makeEncounter(r,elite){if(elite)return [mkFoe(pick(['warden','goliath']),r)];
+ var tier=r<=2?['imp','imp','hollow','wraith']:['serpent','wraith','sentry','thrall','hollow'];
+ var n=r<=1?(Math.random()<.5?1:2):(Math.random()<.45?2:1);
+ var out=[];for(var i=0;i<n;i++)out.push(mkFoe(pick(tier),r));return out}
+function nextMove(f){var p=f.def.pool;
+ if(f.def.cycle){f.ci=(f.ci+1)%p.length;f.mi=f.ci;var o={};var k1;for(k1 in p[f.ci])o[k1]=p[f.ci][k1];return o}
+ var idx,guard=0;
+ do{idx=Math.floor(Math.random()*p.length);guard++}while(p.length>1&&idx===f.mi&&guard<10);
+ f.mi=idx;var m={};var k2;for(k2 in p[idx])m[k2]=p[idx][k2];return m}
+function startCombat(foes,type){
+ foes.forEach(function(f,i){f.idx=i});
+ G.combat={turn:1,energy:3,maxEnergy:3,draw:shuffle(G.deck.map(function(c){return {id:c.id,up:c.up,uid:c.uid}})),
+  hand:[],discard:[],exhaust:[],foes:foes,block:0,str:0,weak:0,vuln:0,over:false};
+ G.combat.foes.forEach(function(f){f.move=nextMove(f)});
+ showScreen('combat');
+ $('#hero-fig').textContent=CLASSES[G.clsKey].glyph;
+ $('#hero-name').textContent=CLASSES[G.clsKey].name.toUpperCase();
+ var titles={combat:'Shadows Approach',elite:'A Great Foe Bars the Way',boss:'THE ARCH-FIEND AWAITS'};
+ banner('Floor '+G.floor+' — '+titles[type]);
+ if(type==='boss')sfx('boss');
+ beginPlayerTurn();
+ var C=G.combat;
+ if(has('shieldFaith'))C.block+=4;
+ if(has('mantle'))C.str+=2;
+ if(has('sword'))C.str+=1;
+ renderCombatAll()}
+function beginPlayerTurn(){var C=G&&G.combat;if(!C||C.over)return;
+ C.block=has('censer')?2:0;
+ C.weak=Math.max(0,C.weak-1);C.vuln=Math.max(0,C.vuln-1);
+ C.energy=C.maxEnergy+((C.turn===1&&has('harp'))?1:0);
+ drawCards(5);sfx('draw');renderCombatAll()}
+function drawCards(n){var C=G.combat;
+ for(var i=0;i<n;i++){
+  if(!C.draw.length){if(!C.discard.length)break;C.draw=shuffle(C.discard);C.discard=[]}
+  C.hand.push(C.draw.pop())}}
+
+/* ---------- combat render ---------- */
+function foeEl(i){return document.querySelector('.foe[data-i="'+i+'"]')}
+function fmtDmg(f,m){return Math.floor((m.d+f.str+f.db)*(f.weak>0?.75:1))}
+function intentHTML(f){var m=f.move;if(!m)return '';
+ if(m.k==='buff')return '⬆ Strengthen';
+ if(m.k==='def')return '🛡 Guard '+m.b;
+ if(m.k==='atkdef')return '⚔ '+fmtDmg(f,m)+' · 🛡 '+m.b;
+ if(m.k==='debuff')return '⚔ '+fmtDmg(f,m)+' 🌀 Curse';
+ return '⚔ '+fmtDmg(f,m)+((m.t||1)>1?' ×'+m.t:'')}
+function chipsHTML(o){var h='';
+ if(o.block>0)h+='<span class="schip blk" data-tip="Block: absorbs damage, resets each turn">🛡 '+o.block+'</span>';
+ if(o.str)h+='<span class="schip str" data-tip="Strength: adds to attack damage">⚔ '+(o.str>0?'+':'')+o.str+'</span>';
+ if(o.weak>0)h+='<span class="schip bad" data-tip="Weak: deals 25% less damage">💨 Weak '+o.weak+'</span>';
+ if(o.vuln>0)h+='<span class="schip bad" data-tip="Vulnerable: takes 50% more damage">💢 Vuln '+o.vuln+'</span>';
+ return h}
+function renderHero(){var C=G&&G.combat;if(!C)return;
+ $('#hero-hpf').style.width=(100*G.hp/G.maxHp)+'%';
+ $('#hero-hpt').textContent=G.hp+' / '+G.maxHp;
+ $('#hero-chips').innerHTML=chipsHTML({block:C.block,str:C.str,weak:C.weak,vuln:C.vuln})}
+function renderEnemies(){var C=G&&G.combat;if(!C)return;
+ $('#foes').innerHTML=C.foes.map(function(f){
+  return '<div class="fighter foe'+(f.elite?' elite':'')+(f.boss?' boss':'')+(f.hp<=0?' dead':'')+'" data-i="'+f.idx+'" data-act="foe">'
+  +'<div class="aura"></div>'
+  +((f.hp>0&&!C.over)?'<div class="intent">'+intentHTML(f)+'</div>':'')
+  +'<div class="fig">'+f.glyph+'</div><div class="fname">'+f.name+'</div>'
+  +'<div class="bar hp evil"><div class="fill" style="width:'+(100*f.hp/f.maxHp)+'%"></div><span>'+f.hp+' / '+f.maxHp+'</span></div>'
+  +'<div class="chips">'+chipsHTML(f)+'</div></div>'}).join('')}
+function renderHand(){var C=G&&G.combat;if(!C)return;var n=C.hand.length,mid=(n-1)/2;
+ $('#hand').innerHTML=C.hand.map(function(c,i){
+  return cardHTML(c,'data-act="hand-card" data-i="'+i+'"')}).join('');
+ var kids=$('#hand').children;
+ for(var i=0;i<kids.length;i++){var el=kids[i];
+  el.style.setProperty('--rot',((i-mid)*5)+'deg');
+  el.style.setProperty('--ty',(Math.pow(Math.abs(i-mid),2)*5)+'px');
+  var d=CARDS[C.hand[i].id];
+  if(d.cost>C.energy)el.classList.add('dark');
+  if(i===targeting)el.classList.add('sel')}}
+function renderPiles(){var C=G&&G.combat;if(!C)return;
+ $('#draw-n').textContent=C.draw.length;$('#discard-n').textContent=C.discard.length}
+function renderOrb(){var C=G&&G.combat;if(!C)return;
+ $('#orb-txt').textContent=C.energy+'/'+C.maxEnergy;
+ $('#orb').classList.toggle('empty',C.energy===0)}
+function renderEndBtn(){var b=$('#btn-end');if(!G||!G.combat)return;
+ b.disabled=busy||G.combat.over;
+ b.textContent=(busy&&!G.combat.over)?'ENEMY TURN…':'END TURN'}
+function renderCombatAll(){renderHero();renderEnemies();renderHand();renderPiles();renderOrb();renderEndBtn()}
+
+/* ---------- play flow ---------- */
+function cancelTargeting(){targeting=-1;var s=$('#scr-combat');
+ if(s)s.classList.remove('targeting');
+ if(G&&G.combat)renderHand()}
+function tryPlay(i,foeIdx){if(foeIdx===undefined)foeIdx=-1;
+ if(busy||!G||!G.combat||G.combat.over)return;
+ var C=G.combat,inst=C.hand[i];if(!inst)return;
+ var d=CARDS[inst.id];
+ if(d.cost>C.energy){sfx('err');var o=$('#orb');o.classList.add('deny');setTimeout(function(){o.classList.remove('deny')},320);return}
+ var alive=C.foes.filter(function(f){return f.hp>0});if(!alive.length)return;
+ if(d.type==='attack'&&!d.v.aoe&&alive.length>1&&foeIdx<0){
+  targeting=i;$('#scr-combat').classList.add('targeting');renderHand();sfx('click');return}
+ var target=null;
+ if(d.type==='attack'&&!d.v.aoe){
+  target=(foeIdx>=0)?C.foes[foeIdx]:alive[0];
+  if(!target||target.hp<=0)target=alive[0]}
+ cancelTargeting();playCard(i,target)}
+function hitFoe(f,base){var C=G.combat;
+ var d=Math.floor((base+C.str)*(C.weak>0?.75:1)*(f.vuln>0?1.5:1));
+ var bl=Math.min(f.block,d);f.block-=bl;d-=bl;f.hp=Math.max(0,f.hp-d);
+ return {d:d,bl:bl}}
+function foeFloat(f,r){var el=foeEl(f.idx);if(!el)return;
+ el.classList.remove('hit');void el.offsetWidth;el.classList.add('hit');
+ float(el,r.d>0?('-'+r.d):'BLOCKED',r.d>0?'dmg':'blk');sfx('hit')}
+async function playCard(i,target){busy=true;renderEndBtn();
+ var C=G.combat,inst=C.hand[i],d=CARDS[inst.id],v=valsOf(inst);
+ C.energy-=d.cost;sfx('card');
+ var el=$('#hand').children[i];if(el)el.classList.add('played');
+ await sleep(160);
+ if(!G||!G.combat||G.combat!==C)return;
+ C.hand.splice(i,1);
+ if(v.exhaust)C.exhaust.push(inst);else C.discard.push(inst);
+ if(v.block){C.block+=v.block;sfx('block');float($('#hero'),'+'+v.block+' 🛡','blk')}
+ if(v.heal){var b=G.hp;G.hp=Math.min(G.maxHp,G.hp+v.heal);
+  if(G.hp>b){float($('#hero'),'+'+(G.hp-b),'heal');sfx('heal')}renderHUD()}
+ if(v.str){C.str+=v.str;float($('#hero'),'+'+v.str+' ⚔','buff')}
+ if(v.draw)drawCards(v.draw);
+ renderHero();renderOrb();renderHand();renderPiles();
+ if(v.dmg){
+  if(v.aoe){for(var q=0;q<C.foes.length;q++){var f=C.foes[q];if(f.hp<=0)continue;
+   var r=hitFoe(f,v.dmg);renderEnemies();foeFloat(f,r);await sleep(150);if(!G.combat)return}}
+  else{var t=v.times||1;
+   for(var k=0;k<t;k++){var r2=hitFoe(target,v.dmg);renderEnemies();foeFloat(target,r2);
+    if(target.hp<=0)break;await sleep(180);if(!G.combat)return}}}
+ if(target&&target.hp>0){
+  if(v.vuln){target.vuln+=v.vuln;renderEnemies();float(foeEl(target.idx),'VULNERABLE','buff')}
+  if(v.weak){target.weak+=v.weak;renderEnemies();float(foeEl(target.idx),'WEAK','buff')}}
+ busy=false;renderCombatAll();checkWin()}
+function dmgToPlayer(base){var C=G.combat;
+ var d=Math.floor(base*(C.vuln>0?1.5:1));
+ var bl=Math.min(C.block,d);C.block-=bl;d-=bl;
+ G.hp=Math.max(0,G.hp-d);
+ var hero=$('#hero');hero.classList.remove('hurt');void hero.offsetWidth;hero.classList.add('hurt');
+ float(hero,d>0?('-'+d):'BLOCKED',d>0?'dmg':'blk');
+ if(d>0){sfx('hit');shakeScr();if(d>=12)flashRed()}else sfx('block');
+ renderHero();renderHUD();
+ if(G.hp<=0)defeat()}
+function checkWin(){var C=G&&G.combat;if(!C||C.over)return;
+ if(C.foes.every(function(f){return f.hp<=0})){
+  C.over=true;busy=true;renderCombatAll();sfx('win');
+  setTimeout(victoryFlow,850)}}
+async function enemyAct(f){var C=G&&G.combat;if(!C)return;
+ f.block=0;f.weak=Math.max(0,f.weak-1);f.vuln=Math.max(0,f.vuln-1);
+ var m=f.move;
+ var el=foeEl(f.idx);if(el)el.classList.add('act');
+ await sleep(340);
+ if(!G||!G.combat)return;
+ if(m.b)f.block+=m.b;
+ if(m.s)f.str+=m.s;
+ if(m.d){var t=m.t||1;
+  for(var k=0;k<t;k++){
+   dmgToPlayer(Math.floor((m.d+f.str+f.db)*(f.weak>0?.75:1)));
+   if(G.hp<=0)return;
+   await sleep(220);if(!G||!G.combat)return}}
+ if(m.weak)C.weak+=m.weak;
+ if(m.vuln)C.vuln+=m.vuln;
+ f.move=nextMove(f);
+ renderEnemies();renderHero();
+ var el2=foeEl(f.idx);
+ if(el2){if(m.b)float(el2,'+'+m.b+' 🛡','blk');if(m.s)float(el2,'+'+m.s+' ⚔','buff')}
+ if(m.weak)float($('#hero'),'WEAKENED','buff');
+ if(m.vuln)float($('#hero'),'VULNERABLE','buff');
+ await sleep(260)}
+async function onEndTurn(){if(busy||!G||!G.combat||G.combat.over)return;
+ busy=true;cancelTargeting();sfx('turn');
+ var C=G.combat;
+ C.discard=C.discard.concat(C.hand);C.hand=[];
+ renderHand();renderPiles();renderEndBtn();
+ await sleep(380);
+ for(var i=0;i<C.foes.length;i++){
+  if(!G||!G.combat)return;
+  var f=C.foes[i];
+  if(f.hp<=0||G.hp<=0)continue;
+  await enemyAct(f)}
+ if(!G||!G.combat||G.hp<=0)return;
+ C.turn++;busy=false;beginPlayerTurn()}
+function victoryFlow(){if(!G)return;
+ var node=G.map[G.row][G.nodeIdx],elite=node.type==='elite',boss=node.type==='boss';
+ if(has('oil')&&G.hp>0&&G.hp<G.maxHp)G.hp=Math.min(G.maxHp,G.hp+3);
+ renderHUD();
+ if(boss){showEnd(true);return}
+ var gold=(elite?ri(42,58):ri(18,27))+G.floor*2;G.gold+=gold;sfx('gold');
+ var relicDrop=null;
+ if(elite&&Math.random()<.7){
+  var pool=Object.keys(RELICS).filter(function(k){
+   return ['shieldFaith','mantle','harp'].indexOf(k)<0&&!G.relics.some(function(r){return r.id===k})});
+  if(pool.length)relicDrop=pick(pool)}
+ if(relicDrop)addRelic(relicDrop);
+ openRewards(gold,relicDrop,elite)}
+function defeat(){var C=G&&G.combat;if(C)C.over=true;busy=true;sfx('lose');flashRed();
+ setTimeout(function(){showEnd(false)},1000)}
+
+/* ---------- overlays ---------- */
+function showOverlay(html){$('#overlay-box').innerHTML=html;$('#overlay').classList.add('show')}
+function hideOverlay(){$('#overlay').classList.remove('show');deckMode=null}
+function cardChoices(n,boost){var out=[];
+ while(out.length<n){var r=Math.random();
+  var rar=boost?((r<.18)?'rare':(r<.55)?'uncommon':'common'):((r<.08)?'rare':(r<.38)?'uncommon':'common');
+  var pool=Object.keys(CARDS).filter(function(k){return CARDS[k].rar===rar});
+  var id=pick(pool);if(out.indexOf(id)<0)out.push(id)}
+ return out.map(mkCard)}
+function openRewards(gold,relic,elite){pending={cards:cardChoices(3,elite)};
+ var lines='<div class="rw-line">🪙 Gained <b>+'+gold+'</b> Gold</div>';
+ if(relic)lines+='<div class="rw-line">'+RELICS[relic].glyph+' Relic gained: <b>'+RELICS[relic].name+'</b></div>';
+ if(has('oil'))lines+='<div class="rw-line">🏺 Oil of Gladness: <b style="color:var(--green)">+3 HP</b></div>';
+ showOverlay('<h2 class="hd">VICTORY REWARDS</h2><div style="margin:16px 0">'+lines+'</div>'
+  +'<p class="sub">Choose a card to add to thy deck — or walk on.</p>'
+  +'<div class="rw-cards">'+pending.cards.map(function(c,i){return cardHTML(c,'data-act="reward-card" data-i="'+i+'"')}).join('')+'</div>'
+  +'<button class="btn" data-act="reward-skip">SKIP / CONTINUE ➤</button>')}
+function openDeck(list,title,mode,sub){deckMode=mode||null;
+ showOverlay('<h2 class="hd">'+title+'</h2>'+(sub?'<p class="sub">'+sub+'</p>':'')
+  +'<div class="deckgrid'+(mode?' mode-pick':'')+'">'
+  +list.map(function(c){return cardHTML(c,mode?'data-act="deck-pick"':'')}).join('')+'</div>'
+  +'<button class="btn" data-act="ov-close">CLOSE</button>')}
+function deckPick(uid){var card=null;
+ for(var i=0;i<G.deck.length;i++)if(G.deck[i].uid===uid)card=G.deck[i];
+ if(!card)return;
+ if(deckMode==='smith'){card.up=true;sfx('buy');toast(CARDS[card.id].name+' upgraded! ✦');hideOverlay();campDone();renderHUD()}
+ else if(deckMode==='purge'){G.deck=G.deck.filter(function(c){return c.uid!==uid});sfx('buy');
+  toast(CARDS[card.id].name+' purged from thy deck');hideOverlay();renderHUD()}}
+
+/* ---------- camp / shop / end ---------- */
+function openCamp(){G.campUsed=false;showScreen('camp');
+ $('#camp-amt').textContent='+'+Math.floor(G.maxHp*.3);
+ $('#camp-rest').disabled=false;$('#camp-forge').disabled=false;$('#camp-continue').hidden=true}
+function campDone(){if(!G)return;G.campUsed=true;
+ $('#camp-rest').disabled=true;$('#camp-forge').disabled=true;$('#camp-continue').hidden=false}
+var QUOTES=['"Peace be with thee, pilgrim… and coin loosens the soul."',
+ '"Wares blessed, prices fair — mostly."','"Even the righteous must pay, friend."',
+ '"Buy now; salvation waits for no one."'];
+function openShop(){var cards=cardChoices(4,false).map(function(c){return {inst:c,sold:false}});
+ var rpool=Object.keys(RELICS).filter(function(k){
+  return ['shieldFaith','mantle','harp'].indexOf(k)<0&&!G.relics.some(function(r){return r.id===k})});
+ G.shop={cards:cards,relic:(rpool.length&&Math.random()<.8)?{id:pick(rpool),price:150,sold:false}:null,purgeUsed:false};
+ showScreen('shop');renderShop()}
+function renderShop(){var S=G.shop;if(!S)return;
+ var html='<div class="shop-head"><div class="merchant">⚖️</div>'
+  +'<div><h2 class="hd" style="text-align:left">THE HOLY MERCHANT</h2><p>'+pick(QUOTES)+'</p></div></div>'
+  +'<h3>CARDS FOR SALE</h3><div class="shop-cards">'
+  +S.cards.map(function(s,i){return '<div class="shop-item">'+cardHTML(s.inst)
+   +'<div class="price-tag'+(s.sold?' off':'')+'" data-act="buy-card" data-i="'+i+'">'
+   +(s.sold?'SOLD':'🪙 '+PRICE[CARDS[s.inst.id].rar])+'</div></div>'}).join('')+'</div>';
+ if(S.relic)html+='<h3>SACRED RELICS</h3><div class="relic-offer">'
+  +'<span class="glyph">'+RELICS[S.relic.id].glyph+'</span>'
+  +'<span><b style="color:var(--gold-hi)">'+RELICS[S.relic.id].name+'</b><br><span class="dim">'+RELICS[S.relic.id].tip+'</span></span>'
+  +'<div class="price-tag'+(S.relic.sold?' off':'')+'" data-act="buy-relic">'+(S.relic.sold?'SOLD':'🪙 '+S.relic.price)+'</div></div>';
+ html+='<h3>PURGE SERVICE</h3><div class="relic-offer"><span class="glyph">🗑️</span>'
+  +'<span>Remove a card permanently from thy deck.</span>'
+  +'<div class="price-tag'+(S.purgeUsed?' off':'')+'" data-act="buy-purge">'+(S.purgeUsed?'USED':'Purge Card (75g)')+'</div></div>'
+  +'<div style="text-align:center;margin-top:10px"><button class="btn primary" data-act="leave-shop">LEAVE SHOP ➤</button></div>';
+ $('#shop-box').innerHTML=html}
+function shopBuyCard(i){var S=G.shop,s=S.cards[i];if(!s||s.sold)return;
+ var p=PRICE[CARDS[s.inst.id].rar];
+ if(G.gold<p){sfx('err');toast('Not enough gold…');return}
+ G.gold-=p;s.sold=true;G.deck.push(s.inst);sfx('buy');
+ toast(CARDS[s.inst.id].name+' purchased');renderHUD();renderShop()}
+function shopBuyRelic(){var S=G.shop,r=S.relic;if(!r||r.sold)return;
+ if(G.gold<r.price){sfx('err');toast('Not enough gold…');return}
+ G.gold-=r.price;r.sold=true;addRelic(r.id);sfx('buy');renderHUD();renderShop()}
+function shopBuyPurge(){var S=G.shop;if(S.purgeUsed)return;
+ if(G.gold<75){sfx('err');toast('Not enough gold…');return}
+ G.gold-=75;S.purgeUsed=true;renderHUD();renderShop();
+ openDeck(G.deck,'🗑️ PURGE SERVICE','purge','Choose a card to remove forever.')}
+function showEnd(win){showScreen('end');var s=$('#scr-end');
+ s.classList.toggle('lose',!win);
+ if(win){s.innerHTML='<div class="campfire" style="filter:drop-shadow(0 0 30px rgba(255,220,120,.9))">👑</div>'
+  +'<h1 class="end-title">ASCENSION COMPLETE!</h1>'
+  +'<p class="sub" style="font-size:17px">Thou hast vanquished the Arch-Fiend and conquered the shadows.</p>'
+  +'<div class="end-stats"><div class="chip">🗺️ <b>9</b> Floors</div><div class="chip">🪙 <b>'+G.gold+'</b> Gold</div>'
+  +'<div class="chip">📜 <b>'+G.deck.length+'</b> Cards</div><div class="chip">❤️ <b>'+G.hp+'</b> HP left</div></div>'
+  +'<button class="btn primary" data-act="again">BEGIN NEW PILGRIMAGE ➤</button>'}
+ else{s.innerHTML='<div class="campfire" style="filter:grayscale(.8) drop-shadow(0 0 20px rgba(200,40,20,.6))">🪦</div>'
+  +'<h1 class="end-title">YOU HAVE FALLEN</h1>'
+  +'<p class="sub" style="font-size:17px">The dark forces claim this path… but faith endures forever.</p>'
+  +'<button class="btn primary" data-act="again">🙏 PRAY &amp; RISE AGAIN</button>'}}
+
+/* ---------- global event delegation (one listener, nothing to miss) ---------- */
+document.addEventListener('click',function(e){
+ var t=e.target.closest('[data-act]');
+ if(!t||t.disabled)return;
+ var a=t.getAttribute('data-act');
+ if(a==='toggle-audio'){audioOn=!audioOn;$('#btn-audio').textContent=audioOn?'🔊':'🔇';if(audioOn)sfx('click');return}
+ if(a==='pick-class'){sfx('win');newGame(t.getAttribute('data-cls'));return}
+ if(!G)return;
+ switch(a){
+  case 'open-deck':sfx('click');openDeck(G.deck,'📜 THY DECK',null,G.deck.length+' cards bound for the ascent');break;
+  case 'node':{var r=+t.getAttribute('data-r'),j=+t.getAttribute('data-j');
+   if(isAvail(r,j)){sfx('click');enterNode(r,j)}break}
+  case 'hand-card':if(G.combat)tryPlay(+t.getAttribute('data-i'));break;
+  case 'foe':if(G.combat&&targeting>=0)tryPlay(targeting,+t.closest('.foe').getAttribute('data-i'));break;
+  case 'end-turn':onEndTurn();break;
+  case 'open-draw':if(G.combat)openDeck(G.combat.draw,'DRAW PILE',null);break;
+  case 'open-discard':if(G.combat)openDeck(G.combat.discard,'DISCARD PILE',null);break;
+  case 'camp-rest':if(!G.campUsed){var amt=Math.floor(G.maxHp*.3);
+   G.hp=Math.min(G.maxHp,G.hp+amt);sfx('heal');toast('Thou art restored: +'+amt+' HP');renderHUD();campDone()}break;
+  case 'camp-forge':if(!G.campUsed){sfx('click');openDeck(G.deck,'🔨 FORGE ARMOR','smith','Choose a card to upgrade permanently.')}break;
+  case 'camp-continue':sfx('click');backToMap();break;
+  case 'leave-shop':sfx('click');backToMap();break;
+  case 'buy-card':shopBuyCard(+t.getAttribute('data-i'));break;
+  case 'buy-relic':shopBuyRelic();break;
+  case 'buy-purge':shopBuyPurge();break;
+  case 'reward-card':{var c=pending&&pending.cards[+t.getAttribute('data-i')];
+   if(c){G.deck.push(c);sfx('buy');toast(CARDS[c.id].name+' added to deck');hideOverlay();backToMap()}break}
+  case 'reward-skip':sfx('click');hideOverlay();backToMap();break;
+  case 'deck-pick':deckPick(+t.getAttribute('data-uid'));break;
+  case 'ov-close':sfx('click');hideOverlay();break;
+  case 'again':sfx('click');toTitle();break;
+ }});
+document.addEventListener('contextmenu',function(e){
+ if(targeting>=0){e.preventDefault();cancelTargeting()}});
+document.addEventListener('keydown',function(e){
+ if(e.key==='Escape'){
+  if(targeting>=0)cancelTargeting();
+  else if($('#overlay').classList.contains('show'))hideOverlay()}
+ if((e.key==='e'||e.key==='E')&&!$('#overlay').classList.contains('show')&&G&&G.combat)onEndTurn()});
+$('#overlay').addEventListener('click',function(e){
+ if(e.target.id==='overlay')hideOverlay()});
+
+/* ---------- boot ---------- */
+$('#class-row').innerHTML=Object.keys(CLASSES).map(function(k){var c=CLASSES[k];
+ return '<div class="class-card frame" data-act="pick-class" data-cls="'+k+'">'
+  +'<div class="glyph">'+c.glyph+'</div><h3>'+c.name.toUpperCase()+'</h3>'
+  +'<p>'+c.blurb+'</p>'
+  +'<div class="relic-note">'+RELICS[c.relic].glyph+' '+RELICS[c.relic].name+' — '+RELICS[c.relic].tip+'</div>'
+  +'<div class="dim" style="font-size:12px">❤️ '+c.hp+' HP · 📜 '+c.deck.length+' cards</div>'
+  +'<button class="btn">SELECT CLASS</button></div>'}).join('');
+(function(){var em=$('#embers');
+ for(var i=0;i<26;i++){var s=document.createElement('i');
+  s.style.left=(Math.random()*100)+'%';
+  s.style.setProperty('--s',(1.5+Math.random()*3.5)+'px');
+  s.style.setProperty('--d',(7+Math.random()*9)+'s');
+  s.style.setProperty('--dl',(-Math.random()*14)+'s');
+  s.style.setProperty('--x',(Math.random()*90-45)+'px');
+  em.appendChild(s)}})();
+</script>
+</body>
+</html>
